@@ -1,0 +1,671 @@
+this was just a test.
+lol ;)
+Looks like a typo here:http://github.com/mongodb/mongo/commit/2b7eb102159a36129222afa1883ea3b15145e08b#L0R40See &7 instead of &&
+Bravo :)
+Good to see I'm not the only one improving error messages!
+Is it necessarily a good idea to have class diagrams in the visual studio projects? These projects will always be an afterthought (and rightly so) to the scons project.
+that's an accident.will remove.
+Confirmed that actually worked.
+Shouldn't the constant MaxBSONObjectSize be used instead? In case one wants to customize the size.
+stoll() doesn't exist in Visual Studio 2008. I'm installing the windows 7 SDK to see if that will rectify it, but perhaps even being dirty and calling atol() would be better than causing build problems.
+The older, more conservative function is _strtoi64()Fix in http://github.com/zippy1981/mongo/commit/f7b7c07e2a72011b8dbd72d10dcbaa22d8e5fb54Stackoverflow discussion is in http://stackoverflow.com/questions/3106026/is-there-a-stoll-stroll-string-to-long-long-alternative-in-visual-studio-20/3106060#3106060
+Test code I used for this.:<pre>#include <stdio.h>#include <stdlib.h>#include <string>namespace mongo {inline void uasserted(int msgid , char* msg) { printf("Msg: %s", msg); exit(4); }/* "user assert".if asserts, user did something wrong, not our code */#define MONGO_uassert(msgid, msg, expr) (void)( (!!(expr)) || (mongo::uasserted(msgid, msg), 0) )#define uassert MONGO_uassertinline long long parseLL( const char *n );// expect that n contains a base ten number and nothing else after it// NOTE win version hasn't been tested directlyinline long long parseLL( const char *n ) {long long ret;uassert( 13307, "cannot convert empty string to long long", *n != 0 );#if !defined(_WIN32)char *endPtr = 0;errno = 0;ret = strtoll( n, &endPtr, 10 );uassert( 13305, "could not convert string to long long", *endPtr == 0 && errno == 0 );#else#if _MSC_VER>=1600size_t endLen = 0;try {ret = std::stoll( n, &endLen, 10 );} catch ( ... ) {endLen = 0;}uassert( 13306, "could not convert string to long long", endLen != 0 && n[ endLen ] == 0 );#else // stoll() wasn't introduced into VS 2010.char* endPtr = (char *)&n[strlen(n) - 1];try {ret = _strtoi64( n, &endPtr, 10 );} catch ( ... ) {endPtr = 0;}uassert( 13310, "could not convert string to long long", *endPtr == 0 );#endif // _MSC_VER >= 16#endif // !defined(_WIN32)return ret;}}void main () {//printf("_MSC_VER: %d\n", _MSC_VER);char szNumber[] = "999999999";printf("number '%s': %d\n\n", szNumber, mongo::parseLL(szNumber));char szNumberWhitespace[] = "999999999999";printf("number '%s': %d\n\n", szNumberWhitespace, mongo::parseLL(szNumberWhitespace));char szNumberBad[] = "99r9dd999999";printf("number '%s': %d\n\n", szNumberBad, mongo::parseLL(szNumberBad));}</pre>
+Dwight,Shouldn't we also check the error cases?I'll confess I'm not running the unit tests on my machine. I'll start doing that.
+sure.UnitTest is something that runs at every server startup.so they must very light and fast."real" tests should go in dbtests / test binary (or jstests if applicable)running tests v good idea.see "smoke" page on wiki
+The UTF-8 BOM, signifying nothing, and annoying the hell out of developers and users.
+Was the near/far thing a 64 bit thing? I though the near/far dated back to win16 programming?Regardless, it compiles.
+vs2008 vs vs2010 issue
+don't comment out the lines in the method, just comment out doTest() etc...makes it easer to test, etc...
+Eliot, please roll this commit back. I found a bug with it. I didn't think you would include it until I made a pull request to you. Thanks, Tony
+Wouldn't "-o -" be more inline with unix convention than "-o stdout"? Or is the problem boost parsing?Then again, part of me thinks default mongodump behavior should be to stdout, and there shoulld be a new switch for current default behavior.
+Double build break, double my bad. I'll have to start building on ubuntu to check these things.
+Won't this catch use of small oplog size when used with an arbiter? In your docs you recommend using a small oploghttp://www.mongodb.org/display/DOCS/Adding+an+Arbiter
+right.will take it out.
+Could InterLockedExchange be used on windows and __sync_xor_and_fetch when GCC is used?For windows:http://msdn.microsoft.com/en-us/library/ms683590(v=vs.85).aspxFor GCC:http://gcc.gnu.org/onlinedocs/gcc/Atomic-Builtins.html
+There is no way to make it cleaner using boost::filesystem ?http://www.boost.org/doc/libs/1_45_0/libs/filesystem/v2/doc/index.htm
+detects int overflow in passed 2d bounds/parameters
+Major change here is basically to pull up the expand algorithm into the superclass.
+You also need to make a similar change within void ReplicaSetMonitor::_checkHosts():Line 297: log(1) << "updated set (" << _name << ") to: " << getServerAddress()Perhaps more places as well.
+The one you mentioned should be that way i believe.
+Why not checking that scale is a multiple of 1024 ?
+Won't this mean you can step down a primary (and assuming a busy website load) 10 seconds of data may be lost?I would have thought you would want to have no lag what so ever, otherwise you need to specify force: true, instead of allowing 10 seconds of lag time?
+> Won't this mean you can step down a primary (and assuming a busy website> load) 10 seconds of data may be lost?Assuming a healthy network, no.The other secondaries will replicate fromthe primary until they are up-to-date, then elect a new primary.The 10second rule is to make sure that there isn't a long lag while secondariesare catching up (and there is no primary).If the network is unhealthy, then it is possible that data will be rolledback (not lost).However, this was true before, is part of the design ofreplica sets (seehttp://www.mongodb.org/display/DOCS/Replica+Set+Design+Concepts), and thiscommit provides a stronger guarantee than before: only 10 seconds of datamay be rolled back.On Sat, Apr 9, 2011 at 11:35 PM, Plasma <reply@reply.github.com>wrote:> Won't this mean you can step down a primary (and assuming a busy website> load) 10 seconds of data may be lost?>> I would have thought you would want to have no lag what so ever, otherwise> you need to specify force: true, instead of allowing 10 seconds of lag time?> ##>> Reply to this email directly or view it on GitHub:>> https://github.com/mongodb/mongo/commit/6af8365495692b330f1ec8a93c5f172817f7a7c3#commitcomment-335801
+Ah that makes a lot of sense now.I initially thought that the 10 seconds was a tolerance of how much data you could lose if you wanted to switch primaries (that's what I get from only glancing at the code!).I thought that a stepdown would immediately stop any secondaries from syncing from it (and they could be at most 10 seconds out of date) and then a new primary would be elected within a few seconds (at the cost of maybe losing yet-to-be-synced data from the previous primary).If I am correct in reading your comment then it then sounds like its much smarter than that; and instead the primary steps down, lets the secondaries continue to sync from it to become up to date (so no data is lost, even if the data was not yet synced from the primary), and then a new primary is elected without data loss.The 10 second window is just a way to make sure this 'catch up' process will happen fast (as not much data needs to be synced) as to not delay election of a new primary.Thanks for clearing that up!
+> If I am correct in reading your comment then it then sounds like its much> smarter than that; and instead the primary steps down, lets the secondaries> continue to sync from it to become up to date (so no data is lost, even if> the data was not yet synced from the primary), and then a new primary is> elected without data loss.>> The 10 second window is just a way to make sure this 'catch up' process> will happen fast (as not much data needs to be synced) as to not delay> election of a new primary.Yes, exactly.Thanks for clearing that up!No problem!On Sun, Apr 10, 2011 at 6:36 PM, Plasma <reply@reply.github.com>wrote:> Ah that makes a lot of sense now.>> I initially thought that the 10 seconds was a tolerance of how much data> you could lose if you wanted to switch primaries (that's what I get from> only glancing at the code!).>> I thought that a stepdown would immediately stop any secondaries from> syncing from it (and they could be at most 10 seconds out of date) and then> a new primary would be elected within a few seconds (at the cost of maybe> losing yet-to-be-synced data from the previous primary).>> If I am correct in reading your comment then it then sounds like its much> smarter than that; and instead the primary steps down, lets the secondaries> continue to sync from it to become up to date (so no data is lost, even if> the data was not yet synced from the primary), and then a new primary is> elected without data loss.>> The 10 second window is just a way to make sure this 'catch up' process> will happen fast (as not much data needs to be synced) as to not delay> election of a new primary.>> Thanks for clearing that up!> ##>> Reply to this email directly or view it on GitHub:>> https://github.com/mongodb/mongo/commit/6af8365495692b330f1ec8a93c5f172817f7a7c3#commitcomment-336498
+perhaps, this would extend "life" for SERVER-3016 issues ?
+OMG thank you for fixing this.Personally a victim of it. :)
+Haha, you're welcome :)
+backport?
+The formatting on this is off.Also, this will be kind of slow since its going to cause an error every time.We need to check and see if there actually is a prompt() function.
+Should make it possible to write "uassert( 0, "blah blah", x > 3 );", which will then get translated on first build / first errorcode check to uassert( <next errorcode>, "blah blah", x > 3 );"
+alloc deleted freelist allocation chaining
+Damn, I'm glad I'm not as stupid as the guy who wrote this.
+that's harsh :-)what's wrong with it
+assert is not normally used for buffer overflow protection (as it appears to be in this diff) as it's a macro that doesn't generate any code without NDEBUG defined.However, it appears assert is redefined as MONGO_assert which may properly guard this function even when not compiled with debugging? I couldn't quickly find the definition of MONGO_assert...At any rate the standard approach in this case would be to use the strncpy function which only copies up to len bytes. The strcpy/strncpy man page even includes a sample implementation of strncpy.
+in mongo assert is defined even in release builds.thus this works.the idea is that this notifies if the buffer is too small.strncpy would work but you wouldn't get any notification.this should never happen thus the abort.
+Excellent. Disaster averted.I think this commit just got passed around because it's very difficult to tell that assert has non-default behavior.
+I believe it was passed around as a pre-fix copy of it was found in a thirdparty driver and mistaken for being mongoDB code.Should be corrected inboth places now.On Tue, Jul 19, 2011 at 4:53 PM, schmichael <reply@reply.github.com>wrote:> Excellent. Disaster averted.>> I think this commit just got passed around because it's very difficult to> tell that assert has non-default behavior.> ##>> Reply to this email directly or view it on GitHub:>> https://github.com/mongodb/mongo/commit/8b930cb852f4b9eb68036fb3db2ec21568cdb943#commitcomment-485791
+what's wrong with assert? it works doesn't it?
+I believe it was passed around because apparently this engineer never heard of strncpy(3).
+it means that the db will allocate 3GB right off the bat and take a while to start.May be quite painful for someone just testing the db.I guess we'll have to remember to tell people to use --smallfiles when trying out mongo.
+This line does not affect mongodb parameters in Debian.Admin should create /etc/default/mongo or hotfix start/stop script.
+The same as dbpath — does not affect mongodb parameters in Debian.Admin should create /etc/default/mongo or hotfix start/stop script.
+This loop only iterates twice but the sleep time is one-third, thus only sleeping two-thirds all together. Is this intended?
+It seems odd to me to have non deterministic tests.This code seems like it could lead to a test failing one time and succeeding when you try it again.
+I agree!Just added https://github.com/mongodb/mongo/commit/1450e4ccdf72c77f9e5b8d037bcaff732d863ab3 to remove the non-determinism.
+SERVER-3717 (typo)
+I don't know if it is ok to add comments here, if not I'm sorry and won't do it again.This makes my build fail saying that thread-local is not supported for this target which is true because osx doesn't support __threadAdding !defiled(__MACH\__) makes osx use thread_specific_ptr. I'm using osx Lion and building with no args.Feel free to delete the comment :)
+thanks - just pushed an attempted fix.
+i.e. use query option oplog replay which can efficiently find starting position in a very large oplog when querying GTE
+I'm not sure if this is necessary. Write locks are greedy so a secondary is more likely to starve reads than the sync thread.To keep replication up-to-date, we really need a way of prioritizing the oplog-reading thread on the primary.
+Would the try/catch be better in _addWriteBack?
+please use real names.Client::GodScope godScope;
+see coding styleif () {}else {}
+This is a rather odd decision, but I suppose there are reasons behind them.
+Bad Scott! Bad!
+Should it only do this for a replica set and not Master/Slave?
+test message
+we need to be able to run single files directly - so we need load.js in there
+Would be great to break this up a bit.Too late now - but there is some refactoring and some real changes.
+Shouldn't we also globally replace RS_SHUNNED with RS_REMOVED ?
+would be nice to break these up...especially since the bson one is potentially large
+Why did you add the copy and assignment ops? I think those are the same as the automatically generated ones.
+I checked in the debugger, and it turns out they're not. It appears to have been doing bitwise copies. I don't understand why the compiler didn't complain about requiring a real copy ctor needing to be defined.> --->> From: Mathias Stearn reply@reply.github.com> To: Chris Westin cwestin@yahoo.com> Sent: Tuesday, February 14, 2012 6:56 PM> Subject: Re: [mongo] first cut at named traces (unused); copy ctor and assignment op for BSONObj (59e9b72)>> Why did you add the copy and assignment ops? I think those are the same as the automatically generated ones.> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/59e9b72297906e68686c1ffeb2244736ecac945b#commitcomment-967692
+Things got all piled up while we couldn't push anything.It turns out things were not copying BSONObj correctly before. If it turns out to cause problems, its just a couple of lines to undo it.> --->> From: Eliot reply@reply.github.com> To: Chris Westin cwestin@yahoo.com> Sent: Tuesday, February 14, 2012 6:49 PM> Subject: Re: [mongo] first cut at named traces (unused); copy ctor and assignment op for BSONObj (59e9b72)>> would be nice to break these up...> especially since the bson one is potentially large> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/59e9b72297906e68686c1ffeb2244736ecac945b#commitcomment-967679
+i guess that is a good addition anyway in the sense that lock+fsync is then better.
+not sure exactly how this has evolved but originally the idea was that with ThreadSpanningOp when you use it, you use it only and it wasn't designed to interoperate with the other Lock:: classes and stuff.thus it didn't set threadstate for example.it is fine if it is different but does this now imply i can use ThreadSpanningOp interoperably with all the other Lock:: classes?i imagine it won't play nicely with them.will read more later.
+Right. That doesn't work becUse other things rely on lock semantics.Seems to be working fine now though.On Mar 17, 2012, at 12:57 PM, Dwight Merrimanreply@reply.github.com wrote:> not sure exactly how this has evolved but originally the idea was that with ThreadSpanningOp when you use it, you use it only and it wasn't designed to interoperate with the other Lock:: classes and stuff.thus it didn't set threadstate for example.it is fine if it is different but does this now imply i can use ThreadSpanningOp interoperably with all the other Lock:: classes?i imagine it won't play nicely with them.will read more later.> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/c949cad1fa6e4cb26693748b1751f4fd2e6113b8#commitcomment-1098166
+The ifdefs need to be changed to make this work on Windows XP.
+What's the nature of the conflict in the "using boost::shared_ptr" implementation?That fixed the win32 buildbot and is also used in other unit test files.Should those files be changed as well?
+It sounds like either method will work right now, but there are some reasons to avoid 'using boost::shared_ptr'.
+Given your use case, scoped_ptr?
+This is semantically different then what was there before and not nearly as powerful.The old way with -v you can turn this on at start or runtime.Please change this back and the other one below.
+see abovecould make LOG if performance was the concern
+this should just besleepsecs( runner->config.seconds )
+would it make any sense to do```if( X.n ) {X.c.notify_one();}```as an optimization?
+It's a bit of a microoptimization, since there's nobody to spuriously wake up when X.n is 0, but it would not be incorrect semantically.
+i agree if you are sure notify_one() is fast with no waiters.
+This is going to give some pretty inaccurate stats in high-activity systems.We'll just lose a lot of times.At least label it with SERVER-5026.If you're willing to fix it now, so it doesn't underreport times when the system is heavily loaded, I'd implement an AtomicUint64 in bson/util/atomic_int.h, give it an operator+=, and be done with it.It'll have the same cache performance problems as this implementation, but will at least report correct times.
+Call this "QLockTimingWrapper"?
+Why here is just `_query.isEmpty()` instead of `_query.getFilter().isEmpty()` ?Like here https://github.com/mongodb/mongo/commit/d3d719c3aa72d63fe838f1e5eae7098e3bffe721#L0R95
+this test is redundant. maybe you meant ax...|| bx... ?
+Thanks, I will submit a fix to master for this shortly.
+No plans to merge the auth part atleast to v2.0?
+it should be done as of v2.0.1
+I can only see this in master, no other branches :]
+you're right.was only backported for mongostat, not mongotop.i'll look into it for 2.0.5
+andy pulled it into 2.0.5 today.https://github.com/mongodb/mongo/commit/a55507d21e53970d324eef2cafc653aea648b885
+uncomment this?
+did later
+@erh What do you think of the redis implementation of TTL? http://redis.io/commands/expire
+Its hard to compare directly as the whole system is so different.On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyayreply@reply.github.comwrote:> @erh What do you think of the redis implementation of TTL? http://redis.io/commands/expire> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817
+Oh ya for sure. Though I'm wondering why you chose an active method forexpiring the keys, as opposed to the more passive method used in redis.On Fri, May 11, 2012 at 12:44 AM, Eliot <reply@reply.github.com> wrote:>> Its hard to compare directly as the whole system is so different.>> On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyay> reply@reply.github.com> wrote:>> > @erh What do you think of the redis implementation of TTL?> > http://redis.io/commands/expire> > ---> >> > Reply to this email directly or view it on GitHub:> >> > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817> --->> Reply to this email directly or view it on GitHub:>> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318826
+From the docs, redis seems to do it both passively and actively.On Fri, May 11, 2012 at 2:16 AM, Sid Upadhyayreply@reply.github.comwrote:> Oh ya for sure. Though I'm wondering why you chose an active method for> expiring the keys, as opposed to the more passive method used in redis.>> On Fri, May 11, 2012 at 12:44 AM, Eliot <> reply@reply.github.com>> > wrote:> >> > Its hard to compare directly as the whole system is so different.> >> > On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyay> > reply@reply.github.com> > wrote:> >> > > @erh What do you think of the redis implementation of TTL?> > > http://redis.io/commands/expire> > > ---> > >> > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817> > ---> >> > Reply to this email directly or view it on GitHub:> >> > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318826> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318923
+Ya, which is a pretty interesting choice with respect to performancetradeoffs. I'll have to build this version of mongo and play around with itto see what real performance tradeoffs there could be. Though I'm sure theypale in comparison to the value of TTL.On Fri, May 11, 2012 at 6:16 AM, Eliot <reply@reply.github.com> wrote:>> From the docs, redis seems to do it both passively and actively.>> On Fri, May 11, 2012 at 2:16 AM, Sid Upadhyay> reply@reply.github.com> wrote:>> > Oh ya for sure. Though I'm wondering why you chose an active method for> > expiring the keys, as opposed to the more passive method used in redis.> >> > On Fri, May 11, 2012 at 12:44 AM, Eliot <> > reply@reply.github.com> >> > > wrote:> > >> > > Its hard to compare directly as the whole system is so different.> > >> > > On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyay> > > reply@reply.github.com> > > wrote:> > >> > > > @erh What do you think of the redis implementation of TTL?> > > > http://redis.io/commands/expire> > > > ---> > > >> > > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817> > > ---> > >> > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318826> > ---> >> > Reply to this email directly or view it on GitHub:> >> > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318923> --->> Reply to this email directly or view it on GitHub:>> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1319884
+Would be great if you could run those tests and share results :)On Fri, May 11, 2012 at 1:43 PM, Sid Upadhyayreply@reply.github.comwrote:> Ya, which is a pretty interesting choice with respect to performance> tradeoffs. I'll have to build this version of mongo and play around with it> to see what real performance tradeoffs there could be. Though I'm sure they> pale in comparison to the value of TTL.>> On Fri, May 11, 2012 at 6:16 AM, Eliot <> reply@reply.github.com>> > wrote:> >> > From the docs, redis seems to do it both passively and actively.> >> > On Fri, May 11, 2012 at 2:16 AM, Sid Upadhyay> > reply@reply.github.com> > wrote:> >> > > Oh ya for sure. Though I'm wondering why you chose an active method for> > > expiring the keys, as opposed to the more passive method used in redis.> > >> > > On Fri, May 11, 2012 at 12:44 AM, Eliot <> > > reply@reply.github.com> > >> > > > wrote:> > > >> > > > Its hard to compare directly as the whole system is so different.> > > >> > > > On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyay> > > > reply@reply.github.com> > > > wrote:> > > >> > > > > @erh What do you think of the redis implementation of TTL?> > > > > http://redis.io/commands/expire> > > > > ---> > > > >> > > > > Reply to this email directly or view it on GitHub:> > > >> > > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817> > > > ---> > > >> > > > Reply to this email directly or view it on GitHub:> > > >> > > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318826> > > ---> > >> > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318923> > ---> >> > Reply to this email directly or view it on GitHub:> >> > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1319884> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1321463
+Sure thing Eliot! I'll try to run some tests this evening with idle loadfor TTL jobs in the background, and I'll use the previous commit as thebaseline. Keep ya posted!On Fri, May 11, 2012 at 12:46 PM, Eliot <reply@reply.github.com> wrote:>> Would be great if you could run those tests and share results :)>> On Fri, May 11, 2012 at 1:43 PM, Sid Upadhyay> reply@reply.github.com> wrote:>> > Ya, which is a pretty interesting choice with respect to performance> > tradeoffs. I'll have to build this version of mongo and play around with> > it> > to see what real performance tradeoffs there could be. Though I'm sure> > they> > pale in comparison to the value of TTL.> >> > On Fri, May 11, 2012 at 6:16 AM, Eliot <> > reply@reply.github.com> >> > > wrote:> > >> > > From the docs, redis seems to do it both passively and actively.> > >> > > On Fri, May 11, 2012 at 2:16 AM, Sid Upadhyay> > > reply@reply.github.com> > > wrote:> > >> > > > Oh ya for sure. Though I'm wondering why you chose an active method> > > > for> > > > expiring the keys, as opposed to the more passive method used in> > > > redis.> > > >> > > > On Fri, May 11, 2012 at 12:44 AM, Eliot <> > > > reply@reply.github.com> > > >> > > > > wrote:> > > > >> > > > > Its hard to compare directly as the whole system is so different.> > > > >> > > > > On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyay> > > > > reply@reply.github.com> > > > > wrote:> > > > >> > > > > > @erh What do you think of the redis implementation of TTL?> > > > > > http://redis.io/commands/expire> > > > > > ---> > > > > >> > > > > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817> > >> > > > > ---> > > > >> > > > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318826> > >> > > > ---> > > >> > > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318923> > > ---> > >> > > Reply to this email directly or view it on GitHub:> > >> > > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1319884> > ---> >> > Reply to this email directly or view it on GitHub:> >> > https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1321463> --->> Reply to this email directly or view it on GitHub:>> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1321501
+This was like this on purpose as their are different implementations.Please revert.
+Why global lock?Is lock for collection only is not enough?
+It's more work to determine which collection to lock, and this line is hit rarely if at all.
+This is going to cause problems with other code in the server that assumes a certain format.Going to revert this part.
+Oh snap! Hari K opening his sources!![Hari](http://farm2.staticflickr.com/1332/980464134_23807e3eb2.jpg)
+That's not Hari! That man has hair!
+Commit message should say _recvChunkCommit, not _recvChunkVersion
+what'shappeningbefore
+Typo in commit message - this actually fixes SERVER-8115.
+what happened here?
+Hi Hannes,```Text Search will be released with 2.4.It is presently available in```2.3.2.-POn Thu, Jan 31, 2013 at 4:15 PM, Hannes Magnussonnotifications@github.comwrote:> what happened here?>> —> Reply to this email directly or view it on GitHubhttps://github.com/mongodb/mongo/commit/f201972ecc87f099777e1c61f269998f4399caf4#commitcomment-2539781.
+I mean with that specific word, it has several spaces which I imagine will break stuff.It should probably have been on a new line
+the key should be pidfilepath
+any plans on this getting merged in, i am running into maxconnection limits issues almost everyday.
+We weren't planning to backport this change, but it's usually not a good idea to run with more than 20k conns.Have you looked into why your connection load is so heavy?
+I am the sysadmin of a system that gets more then 20k connections a secondwe spike upto 60k/req a second. We have a 3 shard cluster with 3 members inthe replica set. The machines are fine they are amazon's cr1.8xlarge nodes.On May 26, 2013 2:48 PM, "Daniel Pasette" notifications@github.com wrote:> We weren't planning to backport this change, but it's usually not a good> idea to run with more than 20k conns. Have you looked into why your> connection load is so heavy?>> —> Reply to this email directly or view it on GitHubhttps://github.com/mongodb/mongo/commit/99e6e03543459cf6c4fea61dc6d3c9b4b2ba5ed3#commitcomment-3291673> .
+SERVER-9497 is the ticket associated with this commit
+This log message made my entire evening (during which I was harshly awoken and summoned to fix things). You are a hero, nay, a champion. I salute you.
+Glad I could help, I guess!
+Hi - just noted that the VC++ 2010 project still contains references to principal.cpp and wont build.
+Excellent :)
+should we enable this now?
+Yes.Already spoken to greg about this.On Tue, Sep 17, 2013 at 6:16 AM, Gianfranco Palumbo <notifications@github.com> wrote:> should we enable this now?>> —> Reply to this email directly or view it on GitHubhttps://github.com/mongodb/mongo/commit/c34d5a987b25ec72b989077769435404ad7d3608#commitcomment-4110206> .
+Great!
+Whoot! Thanks Matt
+This file doesn't exist anymore in the repo.I found lots of files still present on the VS2010 project file that changed location, or simply have been deprecated and don't exist anymore.The VS2010 project can't compile as is right, I can't say for sure, but probably there's about 50 files either missing or mislocated.I was trying to make it compile to fix a very bad issue regarding Windows kernel scheduler and timer resolution that cause tailable cursors to underperform unless there's another program running on the computer who has altered the resolution of Windows usingtimeBeginPeriod(n).What are the plans to fix the VS2010 solution file?
+Are you planning to get this timedWaitToBeNotified() function back?
+(cherry-picked from commit 6a3d6d0affbff6249caa50897dcbe325eb45aea9)
+This is actually for SERVER-13753 I believe.
+Is there a reason a new snapshot is created after committing a unit, instead of in beginUnitOfWork()?
+Can you take a look at patch: https://reviews.facebook.net/D21381 and see whether the interface works for you?
+Do you expect "status.IsNotFound()" is possible here? I assume the handling of corruption or IOException should be different from NotFound.
+rocksdb::DB::GetLiveFilesMetaData() can return you information about the LSM tree, including each files' level and key range.
+I cannot think of any way of doing that. What's the use case of that? We can consider whether adding something like can help.
+Is a shorter separator possible with your key structure?
+Usually, the best practice is to check _iterator.status() if it is not valid, and handle the case like corruption or IOException accordingly.
+What's the problem of it?
+ _checkStatus()?
+This return value is a little bit confusing to me. KeyMayExist() does bloom filter check so that even true is returned, the key still may not exist in the DB. Is it what this comment line mean?
+Hi, I'm glad to be able to see the progress. I have some inline comments.Another question: last Tuesday, I heard someone said that RecoveryUnit::isCommitNeeded() is going away. Is it still going to happen?
+Is it merged already? If it is, can you point me the revision?
+A question inline.
+I think so, but it will take some experimentation to be sure.
+No. The RecordID[1] passed in to RecordStore::updateRecord should always be valid. Inserting / upserting is handled in the higher level code.[1] RecordID is currently spelled DiskLoc, but we plan to change that soon.
+I think that will cover the usecase for this function.
+We have a user-facing "touch" command that allows users to preload specified data and/or indexes in to memory in an efficieint manner. For now leaving this as a no-op should be acceptable as it is for optimization, not correctness.
+Probably in this case, but these IDs are only 8 bytes, so it may not buy too much. The index comparator would probably be a more usefull optimization, but it is trickier.Either way, seems like an optimization that can wait.
+It is somewhat unclear what operations on an Iterator require checking status(). Why not just return a rocksdb::Status from the ones that do?
+Once we commit the WriteBatch, all of its changes will now be visible on the new _snapshot. In a sense, it should be considered the "base" that the WriteBatch is on top of, in that "now" represents _snapshot + _writeBatch. We probably also need another Snapshot member that is the initial snapshot from when the operation began (an operation can be many UnitsOfWork). We are still figuring out what the correct API is to support snapshot-based storage engines as sometimes we need the "latest" copy of an object and sometimes the "original" is fine.
+Need to decide if these should always be fatal or if there are some failure modes that are acceptable.
+@RedBeard0531 the iterator interface comes from LevelDB. I don't know the answer:)
+The return value is basically only used for corruption checking, as it should always be true (except for special cases involving background indexing where it is ignored entirely). We may be able to just remove the return value for this method.Basically, it is always ok for this function to return true (although index corruption may go unnoticed), but it should only return false when sure that the key doesn't exist since that can indicate an error.
+@siying You may also be interested in https://github.com/mongodb/mongo/commit/e970e918c5300a13360edb57a88871b02dbe5982Yes, isCommitNeeded() and commitIfNeeded() will be going away soon. Possibly this week.
+@RedBeard0531here is my understanding. A snapshot is technically correct from any time before the first read/write in a transaction (correct me if I'm wrong). The later the snapshot is declared, the performance of RocksDB is likely to be better, because outstanding snapshots during a RocksDB mem table flushing will force us to keep two copies. Seems to me that it will also better for MongoDB since it is less counter-intuitive for users.
+@RedBeard0531 thanks. I'll take a look at https://github.com/mongodb/mongo/commit/e970e918c5300a13360edb57a88871b02dbe5982
+Actually a snapshot is lazily constructed on first use at line 140 below. This is just "refreshing" the snapshot to reflect the WriteBatch we just committed so that _snapshot or _writeBatch will have the latest copy of anything we wrote to.
+@RedBeard0531 can you give more context about why people want to do it? I understand that by issuing a touch before issuing the query, the extra query time will be reduced. But the total time that a user needs to spend on waiting is not reduced, right?Again, technically, it is technically possible for us to add a feature to warm to cache for a column family. Just try to understand the exact use case.
+This isn't done inline with the query, it is a separate command. It is an ops-level operation that can be done (eg) after restarting a server for maintnance, or periodically on a secondary to keep it "hot" if all queries are going to the primary.Also this doesn't just preload for a query, it preloads the _entire_ collection and/or index. This allows it to do sequential IO rather than loading each object on demand. Therefore it can be _significantly_ faster than just waiting for the cache to be warmed by a query.
+PS here is a post about it: http://blog.mongodb.org/post/44706549534/mongodb-tip-the-touch-command
+@RedBeard0531probably I have some misunderstanding about how RecoveryUnit is used. In my understanding, after removing CommitIfNeeded(), one transaction will use one RecoveryUnit, which includes one snapshot and one write batch. commitUnitOfWork() will be called when committing one transaction, and the refreshed _snapshot will be used by the next transaction, if we want to reuse the recovery unit. Am I understand correctly?
+The word "Transaction" is a bit loaded so lets avoid it for now. Consider a multi update that adds 5 "awesome points" to all users if today is their birthday. In mongo, that whole multi-update will use a single RecoveryUnit instance. However, a new WriteUnitOfWork will be created (on the single RU) and committed for each user that matches the query while we are updating thier object. This is because we only guarantee isolation and atomicity on each document, even when doing a multi-update.
+Did I miss anything? In dropDatabase(), while _entryMapMutex is hold, closeDatabase() is called, where _dbCatalogMapMutex is hold?
+lock _dataSizeLock is still hold here. Is it expected?
+I don't understand. How is it possible unless there is a bug in RocksDB? Reverse Seek() returns !Valid(), should mean the look-up key is smaller than the smallest key in the DB. Did you see it happening?
+Hi, this patch broke the build when RocksDB is enabled. Do you want to make sure storage/rocks is still buildable after changing the storage APIs?
+why NULL here :(
+This change seems to have broke my build.```scons: Reading SConscript files ...scons version: 2.0.1python version: 2 6 6 'final' 0AttributeError: 'module' object has no attribute 'TestCase':File "/data/users/icanadi/mongo/SConstruct", line 513:env = Environment(**envDict)File "/usr/lib/scons/SCons/Environment.py", line 991:apply_tools(self, tools, toolpath)File "/usr/lib/scons/SCons/Environment.py", line 105:env.Tool(tool)File "/usr/lib/scons/SCons/Environment.py", line 1691:tool = SCons.Tool.Tool(tool, toolpath, **kw)File "/usr/lib/scons/SCons/Tool/__init__.py", line 94:module = self._tool_module()File "/usr/lib/scons/SCons/Tool/__init__.py", line 109:return imp.load_module(self.name, file, path, desc)File "/data/users/icanadi/mongo/site_scons/site_tools/mongo_unittest.py", line 7:from buildscripts import smokeFile "/data/users/icanadi/mongo/buildscripts/smoke/__init__.py", line 4:import executorFile "/data/users/icanadi/mongo/buildscripts/smoke/executor.py", line 15:import testersFile "/data/users/icanadi/mongo/buildscripts/smoke/testers.py", line 18:class JSUnitTest(unittest.TestCase):```
+_Summary:_If when pulling new code you run into problems using scons,remove the pre-existing "site_scons/site_tools/unittest.pyc" file from yoursource tree.It may cause a "module object has no attribute TestCase"error.One of the pluggable modules in our build's site_scons, "unittest.py",masks the existing "unittest" module.As of yesterday, we are nowimporting the standard unittest module into our builds, which causesproblems when there is a previously compiled module with the same name.This can cause a "module object has no attribute TestCase" error whenrunning scons targets.The solution is to remove the existing site_scons/site_tools/unittest.pycfile - the module has now been renamed to "mongo_unittest".On Fri, Sep 19, 2014 at 1:27 PM, Igor Canadi notifications@github.comwrote:> This change seems to have broke my build.>> scons: Reading SConscript files ...> scons version: 2.0.1> python version: 2 6 6 'final' 0> AttributeError: 'module' object has no attribute 'TestCase':> File "/data/users/icanadi/mongo/SConstruct", line 513:> env = Environment(*_envDict)> File "/usr/lib/scons/SCons/Environment.py", line 991:> apply_tools(self, tools, toolpath)> File "/usr/lib/scons/SCons/Environment.py", line 105:> env.Tool(tool)> File "/usr/lib/scons/SCons/Environment.py", line 1691:> tool = SCons.Tool.Tool(tool, toolpath, *_kw)> File "/usr/lib/scons/SCons/Tool/**init**.py", line 94:> module = self._tool_module()> File "/usr/lib/scons/SCons/Tool/__init__.py", line 109:> return imp.load_module(self.name, file, path, desc)> File "/data/users/icanadi/mongo/site_scons/site_tools/mongo_unittest.py", line 7:> from buildscripts import smoke> File "/data/users/icanadi/mongo/buildscripts/smoke/**init**.py", line 4:> import executor> File "/data/users/icanadi/mongo/buildscripts/smoke/executor.py", line 15:> import testers> File "/data/users/icanadi/mongo/buildscripts/smoke/testers.py", line 18:> class JSUnitTest(unittest.TestCase):>> —> Reply to this email directly or view it on GitHub> https://github.com/mongodb/mongo/commit/e88273ac940cdef9e12c94a6bdbd2694b706a635#commitcomment-7855033> .
+Tnx @monkey101 !
+Any reason why is this NULL here? RocksDB SIGSEGVs because it's expecting OperationContext.
+Is there going to be another 2.6.5 release candidate?If so, can we get this included?
+8192 Alignment size raized the fassert 16143 on my PPC systems, this is why I changed it in the first place.
+Hi @corentinbaron,This is more of a reminder to ourselves. We were thinking of validating the numerical value of the block size itself - for example, that it should be a power of 2.Ben
+Hi @lukebrowning,You should vote for the back port on:https://jira.mongodb.org/browse/SERVER-14835The **Backport** field has been set to _Requested_ - we periodically review all tickets requested for back port. If the ticket is approved (or rejected) for back port, you will see a corresponding change in the **Backport** field and the fix should show up in the next release.Regards,Ben
+Under Centos 7, mongod is in /usr/bin
+Thanks @benety !
+I have to run this query `db.collection.distinct("user", {"method": "ImAMethod"})`I already indexed on `method` field, so my query is fully covered(is my query fully covered?), and I'm not able to see any improvement on the time if I index `user` field seperately.. or do I need to have an index that covers both `method` and `user` like `{user: 1, method: 1}` or `{method: 1, user: 1}`Right now its taking 3mins to get distinct users that satisfy the above query, around 12 million documents in my collection.. single 4GB machine..
+@syllogismos, please take your question over to the [mongodb-user](https://groups.google.com/forum/#!forum/mongodb-user) mailing list. We use github exclusively for development related matters.
+Ok. I will, thanks, just got excited I found the commit that I'm looking for.
+After updating fedora or redhat system , with previous versions of mongod you may have this error :**_ERROR: Cannot write pid file to /var/run/mongodb/mongod.pid: No such file or directory**_If it happen for you patchyour /etc/init.d/mongod script following this commitWhy ?ReHat fedora, cent os...Fedora has changed how things works (breaking third party software...thx)After each reboot mongo will not start because the permission has gone in /var/runAfter each reboot you could not restart until you make this``` bashmkdir -p/var/run/mongodb/ ;chown -Rmongod:mongod /var/run/mongodb/```**you should better edit your script with the commit mod**```vim /etc/init.d/mongod```thx mwmahlbergfor the fix, I leave this comment for others coming from ggl
+Note, this fix has been backported to the v2.6 branch (ddce701ed775996f2a49fc949e26c5bcbc38fe84) and is present in 2.6.5 onward.
+https://jira.mongodb.org/browse/SERVER-16721
+Can https://jira.mongodb.org/browse/SERVER-3719 be marked as fixed now that this change is in or is there more to do still?
+Looks like maybe https://jira.mongodb.org/browse/SERVER-7804 and https://jira.mongodb.org/browse/SERVER-3304 can be marked as resolved now too
+Should https://jira.mongodb.org/browse/SERVER-16734 be closed as fixed now?
+@benmccann - yes, those tickets are all assigned to Mathias and with fixVersion = next release candidate. They'll be resolved when the RC ships or fixVersion will be bumped.
+Cool. Gotcha. Thanks for explaining how the process works
+I figured you would mark tickets as fixed when the commit goes into to address them and then release the next RC when all the tickets assigned to that RC are fixed (or bumped to a later RC). If you don't mark them as fixed when the commit goes in, but rather when the RC is released then how do you decide it's time to release the RC?
+Oh, looks like they have been marked as resolved now instead of waiting for the RC to ship
+Ben, you are correct that tickets are typically resolved at the point whenthe code required to fix them is in master.This can span multiple commitsand/or verification of the fix, so it's not always immediately resolved.The tickets are then typically "closed" once the release is complete.On Fri, Jan 9, 2015 at 11:35 AM, Ben McCann notifications@github.comwrote:> Oh, looks like they have been marked as resolved now instead of waiting> for the RC to ship>> —> Reply to this email directly or view it on GitHub> https://github.com/mongodb/mongo/commit/f58fa5f78a91ce36d8e31d6730ebfdaa6cc1d5ab#commitcomment-9221245> .
+This diff doesn't remove V8_HOST_CAN_READ_UNALIGNED define in case of x86/x64 arches (in src/third_party/v8/src/globals.h), is that intended? The binary crashes on x64 with 4.9.2 all the same...
+Do i have to add these files
+What is the option necessary to make this work?I tried the various settings here:https://jira.mongodb.org/browse/SERVER-965and all fail.
+http://docs.mongodb.org/manual/reference/program/mongod/#cmdoption--wiredTigerDirectoryForIndexes
+nope - does not work (mongo 3.0.1)returns this error in mongo log:"I STORAGE[initandlisten] exception in initAndListen: 72 Metadata contains unexpected value storage engine option for directoryForIndexesExpected true but got falseinstead, terminating"from this command line:"/usr/local/mongo/bin/mongod --wiredTigerDirectoryForIndexes -f /etc/mongo/mongodb.conf"
+what are the contents of your mongodb.conf file?This option is only valid if you are using the WiredTiger storage engine.
+# mongodb.confdbpath=/data/wt1logpath=/data/loglogappend=trueport=27017unixSocketPrefix=/tmprest=truehttpinterface=truejournal=truedirectoryperdb=truefork=truereplSet=rs1storageEngine=wiredTigerdirectoryForIndexes=1###
+wiredTigerDirectoryForIndexes=1 (instead of directoryForIndexes=1) also fails with same error above
+Please see [this comment in SERVER-965](https://jira.mongodb.org/browse/SERVER-965?focusedCommentId=878839&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-878839).
+Awesome! Time to remove https://github.com/mongodb-partners/mongo-rocks/blob/master/.clang-format :)BTW are you planning to backport this to 3.0?
+@igorcanadiThanks!We are still sorting out a few rough edges, so might want to wait on removing your formatter.At this point, we have no plans to backport to 3.0
+@igorcanadi - FYI rough edges have been addressed, it is staying.
+Thanks!
+t
+Thanks, @monkey101 -- this fell through the cracks.
+@shreyasp can you email the mongodb-user user group? This is probably not a great venue for troubleshooting your problem.https://groups.google.com/forum/#!forum/mongodb-user
+Nice!
+:cake: :fireworks: :smile:
+I try to update a minutes array(this array is not exist) with upsert & $ positional operator. I need it automatic create a minutes array, but created a minutes object.
+Many many thanks! Glad to see that MongoDB listens to their audience :)
+What about when globalSec = now?
+Hi, and thanks a lot for the fix and comments, so I was able to find it and get my headache off :) I use OpenSuse and installed mongodb as suggested from this repo https://repo.mongodb.org/zypper/suse/11/mongodb-org/3.0/x86_64/Thing is that in my setup this line was not present: https://github.com/mongodb/mongo/commit/50ca596ace0b1390482408f1b19ffb1f9170cab6#diff-9e766216c0a0f6c97a410cc283361eb0R27and had to manually add it in order to have the full fix. Not sure if it got lost somewhere among the branches, so just to let you know. Thanks again.My Mongodb version is 3.0.6
+Hey Mathias! Do we need to apply the same patch to MongoRocks, too? Would it make sense to move the test to generic storage_engine tests?
+Yes, you'll need to do this in MongoRocks. This would make sense as a generic test, but we don't currently have a way to test oplogs in generic tests, and I don't think that will happen before the 3.2.0 release.
+Ive seen a lot of complaints about missing pid dir when running Centos7 / systemdHere is a tip: You should make sure /var/run/mongodb exists byadding a file/etc/tmpfiles.d/mongod.confIt should contain the followingD /var/run/mongodb 0755 mongod mongod -This will ensure that the pid folder always exists. Has worked well for me and seems to be the systemd way of doing it...http://www.freedesktop.org/software/systemd/man/tmpfiles.d.html
+Same problem here with OpenSuse and the line missing from the init file! Thanks!
+On my system it seems that the logged ip address is from the server ! It should be the client ip.
+@ecocode Thanks for reporting this! I can confirm this behaviour, and I've opened a ticket in our issue tracking system to follow it: https://jira.mongodb.org/browse/SERVER-22054
+Hi!Is there a more updated list I should be looking at? I'm not finding error codes: 16540 or 16549, which are referenced in Moped error messages:```See https://github.com/mongodb/mongo/blob/master/docs/errors.md for details about this error.```
+This file is unfortunately out of date, but you can generate a new one as follows:`buildscripts/errorcodes.py -o errors.md --report=markdown`
+Are you sure that the User/Group is mongod and not mongodb ? (On wheezy it's mongodb)
+Thanks for the catch, and sorry about the confusion. I hit this in my own testing, and am planning to put the fix to this in with the change. I hope to get the change in in the next ~day or so.
+Hi, after an update from mongo 3.0 to 3.2 I get an error on $substr while trying to search inside a collection. I do know how to interpret or fix this error. Any help?
+Hi Chririla,I think I can probably explain what's going on. The $substr expression is currently only designed to work correctly on ASCII strings, not UTF-8 strings, see docs here: https://docs.mongodb.org/manual/reference/operator/aggregation/substr/#exp._S_substrWhen $substr is passed a string encoded in UTF-8, it interprets the 'start' and 'length' inputs in terms of number of bytes, even though some UTF-8 characters require multiple bytes to represent one character. This can result in an output that is no longer valid UTF-8. See below for an example in the mongo shell:```> var x = '\uD834\uDF06'> x𝌆> x.length2> x[0]// won't render here, it's an invalid UTF-8 character```The error you saw means that somewhere in your data there is unicode character that is represented by multiple bytes, and your $substr computation created an invalid UTF-8 character. I hope this helps!
+Thanks for the response. I think this may be it. I will post the outcome after we modify out code.
+Ok. I've filed [SERVER-22580](https://jira.mongodb.org/browse/SERVER-22580) which might help resolve the issue in the future.
+Doesn't this mean that the packages for Jessie will _not_ contain the sysvinit script in addition to the systemd service file?Jessie changed the default to systemd, but sysvinit is still actively supported, so it would be neat/helpful if the package contained both to maintain compatibility. :smile:
+Interestingly, looks like this commit caused RocksDB to start failing jsCore_small_oplog and jsCore_small_oplog_rs with OOM issues:![screen shot 2016-02-26 at 11 27 04 am](https://cloud.githubusercontent.com/assets/1091023/13362955/ff5c8ade-dc7b-11e5-89e8-f886310aa46a.png)
+Here's the test output: https://logkeeper.mongodb.org/build/56cf5f1abe07c44a012dc316/test/56cf5fbbbe07c44a012ddba0?raw=1
+JIRA ticket should be:https://jira.mongodb.org/browse/SERVER-23853
+Those lines were already in my init file (MongoDB shell version: 3.0.11 on centos 7) but I still had to manually create the folder
+Hey @andy10gen, this diff introduced a bunch of failures for me: https://gist.github.com/igorcanadi/1dca04aa6f6506a4ce6ffb5cf5fb72d3.I'm using g++ 4.8.5, is this a known problem?
+We raised the compiler minimum to GCC 5.3 in this commithttps://github.com/mongodb/mongo/commit/8d8f17890e5a7e3cb2ea0994ccb58793abdee124backin April.-AndyOn Thu, May 19, 2016, 11:06 PM Igor Canadi notifications@github.com wrote:> Hey @andy10gen https://github.com/andy10gen, this diff introduced a> bunch of failures for me:> https://gist.github.com/igorcanadi/1dca04aa6f6506a4ce6ffb5cf5fb72d3.>> I'm using g++ 4.8.5, is this a known problem?>> —> You are receiving this because you were mentioned.> Reply to this email directly or view it on GitHub> https://github.com/mongodb/mongo/commit/97f24aa42d86dcadd789ba2c9e144709fa7a7aab#commitcomment-17551261
+good stuff 👍
+Technically, these should be "severe()".
+@tychoish this commit breaks majorly!systemd reads the values literally and completely ignores the fact that "#" is a comment.```Oct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:10] Failed to parse resource value, ignoring: infinity # file sizeOct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:11] Failed to parse resource value, ignoring: infinity # cpu timeOct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:12] Failed to parse resource value, ignoring: infinity # virtual memory sizeOct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:13] Failed to parse resource value, ignoring: 64000 # open filesOct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:14] Failed to parse resource value, ignoring: 64000 # processes/threadsOct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:15] Unknown lvalue 'TasksMax' in section 'Service'Oct 01 14:35:15 hostname systemd[1]: [/lib/systemd/system/mongod.service:16] Unknown lvalue 'TasksAccounting' in section 'Service'```
+I just did some testing of these values on one system, and I've not been able to reproduce this error yet, but I think that there may be something more happening with different versions of systemd, and I want to dig into this further.I've created https://jira.mongodb.org/browse/SERVER-26438 to track this problem more closely, but I'd like more information about your set up, including (if possible) which distribution and operating system release, as well asand version of systemd you've observed this under.Sorry for the problems, and we'll try and address this as quickly as possible.
+Can be easily reproduces with this Vagrant box:```BASE_BOX = "debian/jessie64"BASE_BOX_VERSION = "= 8.2.0"``````vagrant@hostname:~$ cat /etc/os-releasePRETTY_NAME="Debian GNU/Linux 8 (jessie)"NAME="Debian GNU/Linux"VERSION_ID="8"VERSION="8 (jessie)"ID=debianHOME_URL="http://www.debian.org/"SUPPORT_URL="http://www.debian.org/support/"BUG_REPORT_URL="https://bugs.debian.org/"```Sorry don't have a JIRA account, please add it there.
+I tried to reproduce this issue on Debian 8.1 system built from the default Debian AMI on amazon, and was not able to reproduce this issue, although if you upgraded to this package from another package, it's possible that I've not reproduced your environment accurately.It looks like the vagrant box version 8.2.0 was released on October 22, 2015, and there have been a number of updates to the "debian/jessie64" box since then. I'm not sure if this is a factor in the behavior that I'm observing.I'm going to update the Jira ticket with some of this information, but if you have more context that might help us understand what's going on, that might be useful in getting to the bottom of this issue.Sorry for the confusion.
+May I ask for the reason about this revert??
+Please see [this comment](https://jira.mongodb.org/browse/SERVER-21388?focusedCommentId=1165442&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1165442).Thanks,Ramón.
+After I installed the MongoDB(version:3.4.0) on centOS7, I could not find the /etc/init.d/mongod file. So, I created it manually. And pasted the code from github repo (/rpm/init.d-mongod). And then execluded 'chmod 0755 mongod'. Still not working!Anyone help?
+@blackmatch I got the same error for centos 7 (my version is 7.3), mongo 3.4I fix it by replacing /etc/systemd/system/multi-user.target.wants/mongod.servicewith this repo newest version of mongo/rpm/mongod.service
+@wingzero0 I fix it by creating /lib/tmpfiles.d/mongodb.conf with content "d /var/run/mongodb 0755 mongod mongod". And then reboot.
+Im
+Z
+Zd x
+good
+thank you!
+RIP
+@derickr This may seem superfluous, but you may want to stick a few extra tests in:1.A non-Daylight Savings Time datetime for one of the US locations. Christmas would be a safe date to use.2. A July datetime, but before 1918 (when DST was established in the US).The above two will give you the same time. If y'all are using the ICU libraries, this shouldn't be an issue, but you never know with timezones when something will go wonky!
+Is the default dbPath still correct? According to the current documentation the default path is "/data/db" [1][1] https://docs.mongodb.com/manual/reference/configuration-options/#storage.dbPath
+Yes that's correct by default the mongod will use "/data/db". However, if MongoDB is installed using a package manager, it may come with a config, like this one, that specifies a different data directory. Please feel free to open a [docs ticket](https://jira.mongodb.org/projects/DOCS/summary) or use the feedback bar (bottom right) to help us clarify our documentation around this behavior.
+"scheduler"
+Trying to report an error.I was running mongodb v3.4.9 with no issue - but when I updated to v3.4.10, nothing works. All I get is member of replica set 1 not being able to connect to the other (according to the mongo logs on port 27017), when it did just fine before. Both servers on same subnet and can other wise 'talk' just fine using graylog, elasticsearch, ssh, etc etc. Just not in mongo anymore.I tried to re-install on straight new install of 3.4.10. I found that removing the brackets on the ip addresses in the bindIp section allowed the db to run using following:mongod --config /etc/mongod.conf --dbpath /var/lib/mongodbhowever, when I tried to login, I got the following:dshirk@netenggraylog01:~$ mongo --host 10.x.x.xMongoDB shell version v3.4.10connecting to: mongodb://10.x.x.x:27017/2017-10-26T12:01:36.067-0600 W NETWORK[thread1] Failed to connect to 10.x.x.x:27017, in(checking socket for error after poll), reason: Connection refused2017-10-26T12:01:36.067-0600 E QUERY[thread1] Error: couldn't connect to server 10.x.x.x:27017, connection attempt failed :connect@src/mongo/shell/mongo.js:237:13@(connect):1:6exception: connect failedWhere do I report this? Thanks! and sorry for the clutter!
+Hello @brokerdavelhr,I'm sorry to hear you're experiencing this issue. To report a bug in MongoDB, you can [create an issue in JIRA](https://jira.mongodb.org/secure/Dashboard.jspa), which we use to track work on MongoDB. For MongoDB-related support discussion please post on the [mongodb-user group](https://groups.google.com/group/mongodb-user) or [Stack Overflow with the `mongodb` tag](https://stackoverflow.com/questions/tagged/mongodb).Additionally, see our [Technical Support page](https://docs.mongodb.org/manual/support) for additional support resources.Thanks,Mark
+@markbenvenuto: I suppose it wasn't intentional to add a new file during the cherry-pick:src/mongo/s/catalog/sharding_catalog_create_database_test.cppThe same applies for the 3.0 branch: b70b91f98c479d
+https://jira.mongodb.org/browse/SERVER-33876
+Please suggest, does this commit fixes the issue with authentication messages flooding?
+https://jira.mongodb.org/browse/SERVER-34848
+:+1: :clap: 
+🙌
+nice
+I can confirm that I am missing `/etc/init.d/mongod` service script used by `sudo service mongod start` on Jessie.```# service mongod startmongod: unrecognized service# ls -l /etc/init.d/total 8-rwxr-xr-x 1 root root 3809 Mar72018 hwclock.sh-rwxr-xr-x 1 root root 1191 May 17 10:56 procps```I am using the [official way](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/) to install MongoDB.I am using the docker image `debian:stable-slim````# uname -aLinux localhost 4.9.93-linuxkit-aufs #1 SMP Wed Jun 6 16:55:56 UTC 2018 x86_64 GNU/Linux# cat /etc/debian_version9.5```
+For those following from home, please open a SERVER ticket in https://jira.mongodb.org for any server-related issues. Please be aware that the move from sysvinit to systemd is intentional, so adding sysvinit support to Debian9 packages is unlikely to be prioritized.
+@ramonfm ok, just a quick question (I do not want another account), how should I run the mongo service then (I do not want to run it directly using `mongod -f /etc/mongod.conf`)? I do not really care if it is `sysvinit` or `systemd`..And btw, the configuration, `/etc/mongod.conf`, is missing too, I had to create it on my own.
+Unfortunately this is not a good forum for this discussion. You can post on http://groups.google.com/group/mongodb-user or http://stackoverflow.com/questions/tagged/mongodb if you have accounts there.
+typo: opensl 
+typo: deprecared -> deprecated 
+Same on line 157
+Fixes [SERVER-38647](https://jira.mongodb.org/browse/SERVER-38647).
+> MongoDB is free**Not really**
+> MongoDB is free**I don't think that means what you think it means.**
+> The four essential freedoms> A program is free software if the program's users have the four essential freedoms: [1]>> The freedom to run the program as you wish, for any purpose (freedom 0).> The freedom to study how the program works, and change it so it does your computing as you wish (freedom 1). Access to the source code is a precondition for this.> The freedom to redistribute copies so you can help others (freedom 2).> The freedom to distribute copies of your modified versions to others (freedom 3). By doing this you can give the whole community a chance to benefit from your changes. Access to the source code is a precondition for this.http://www.gnu.org/philosophy/free-sw.html
+> The four essential freedoms> A program is free software if the program's users have the four essential freedoms: [1]>> The freedom to run the program as you wish, for any purpose (freedom 0).> The freedom to study how the program works, and change it so it does your computing as you wish (freedom 1). Access to the source code is a precondition for this.> The freedom to redistribute copies so you can help others (freedom 2).> The freedom to distribute copies of your modified versions to others (freedom 3). By doing this you can give the whole community a chance to benefit from your changes. Access to the source code is a precondition for this.http://www.gnu.org/philosophy/free-sw.html
+If these descriptions end up being used for generating docs etc, then perhaps worth changing to:Specify the directory for the diagnostic data collection [files]
+https://jira.mongodb.org/browse/SERVER-38828
+This default is now a configure option in upstream (post 2.7).https://github.com/gperftools/gperftools/commit/5574c87e39ee592c909cb48245c1d91e90ddaf4d
+SERVER-31245
+SERVER-36226
+Why was this fix added only for rpm ? it is happening on other OSes
+@ballad89 It looks like when I made this change the Debian service file did not include a `PIDFile=` line, so this was only relevant to RPM. Could you open a SERVER ticket in Jira (https://jira.mongodb.org/secure/Dashboard.jspa) describing the problem you are seeing?
+SERVER-41007
+The ticket number is 41500, not 414500. 
+https://jira.mongodb.org/browse/SERVER-42089
+https://jira.mongodb.org/browse/SERVER-42089
+how to config it!
+@dishytianxiang you can find the documentation for the server parameter here: https://docs.mongodb.com/manual/reference/parameters/#param.oplogInitialFindMaxSecondsYou must set the parameter using [setParameter](https://docs.mongodb.com/manual/reference/parameters/#synopsis). 
+Hi @dishytianxiangFor any support questions, please create a post on our [Community Google Group](https://groups.google.com/forum/?nomobile=true#!forum/mongodb-user). That is the best place for support questions like yours. 
+ok！ thanks
+Note: commit message should be **SERVER-42040**
+This commit should have had the description "SERVER-33445". Typo.
+Just wanted to say Kudos to the implementer 👏
+@vmiheer - Thanks! Someday we hope to get it upstreamed into mainline SCons.
+Actually fixes SERVER-46798. Misleading commit message.
+@XueruiFa Good stuff!
+This doesn't seem quite right, and makes the resulting packages uninstallable: (https://github.com/docker-library/mongo/pull/391#issuecomment-613012081)```console+ apt-get install -y mongodb-org=4.4.0~rc0 mongodb-org-server=4.4.0~rc0 mongodb-org-shell=4.4.0~rc0 mongodb-org-mongos=4.4.0~rc0 mongodb-org-tools=4.4.0~rc0Reading package lists...Building dependency tree...Reading state information...Some packages could not be installed. This may mean that you haverequested an impossible situation or if you are using the unstabledistribution that some required packages have not yet been createdor been moved out of Incoming.The following information may help to resolve the situation:The following packages have unmet dependencies: mongodb-org-tools : Depends: mongodb-database-tools but it is not installableE: Unable to correct problems, you have held broken packages.```Was `mongodb-database-tools` an intentional `Depends` here, or was that supposed to be `Provides` or perhaps just an extra copy/paste that needed more changes?
+@tianon - The `mongodb-database-tools` is intended as a depends edge, but it looks like the necessary package files to satisfy the dependency were not yet uploaded to the repo. CC @tychoishand @rychipman.Effectively, we converted `mongodb-org-tools` into a metapackage that depends on `mongodb-database-tools` and `mongodb-org-database-tools-extra`, as those latter two packages now originate from two different projects, and there is no longer an org/com (aka community/enterprise) distinction relevant for the contents of `mongodb-database-tools`.
+I don't think this is working properly -- with `<RegistrySearch ... Type="raw" />` above, this `WINDOWSBUILDNUM` value is prefixed with `#` (because it's a `DWORD` value inside the registry; https://wixtoolset.org/documentation/manual/v3/xsd/wix/registrysearch.html), so this is testing `"#10" >= 10`, which I don't think can pass. :confused:I'm rubbish at wix, but I imagine there's bound to be some way to remove the `#` prefix?(This makes the `.msi` for 4.4.0-rc4 impossible to install in my testing. :grimacing:)
+This has been fixed in 760cfd020ff0d70d3a50c69c2ec1fe283cca83e5 in https://jira.mongodb.org/browse/SERVER-48015 and the fix will be in 4.4.0-rc5.Unfortunately, there is no easy way to remove the "#" without using a custom action. Fortunately, the registry key `CurrentMajorVersionNumber` was added in Windows 10 so an existence check is all that is needed. 
+I know the note above mentions that `VersionNT` is set to a fixed value, but what about `VersionNT64`? (https://docs.microsoft.com/en-gb/windows/win32/msi/versionnt64)It seems to be what's recommended by the wix folks for 64bit versions of Windows: https://wixtoolset.org/documentation/manual/v3/howtos/redistributables_and_install_checks/block_install_on_os.htmlI think it would be something like this:```xml<Condition Message="MongoDB application is only supported on Windows 10/Windows 2016 or later">￼<![CDATA[Installed OR (VersionNT64 >= 1000)]]>￼</Condition>```(That `1000` value is corroborated by https://www.advancedinstaller.com/forums/viewtopic.php?p=93536#p93536 :sweat_smile:)If it would help, I'm happy to file this as a PR or something instead. :+1:
+@markbenvenuto doh, sorry, GitHub didn't load your comment (hence my follow-up), and I should've checked master too.Thank you!!
+Unfortunately, the problem is that even `VersionNT64` has the same problem and is hardcoded to 603 (see https://support.microsoft.com/en-us/help/3202260/versionnt-value-for-windows-10-and-windows-server-2016). The installer, `msiexec`, does not have a manifest entry to "see" that it is running on Windows 10. See https://docs.microsoft.com/en-us/windows/win32/sysinfo/targeting-your-application-at-windows-8-1 for what I am talking about.I cannot speak to what AdvancedInstaller is doing though.If you run the installer on Windows 10 with a more verbose log, (`msiexec /lvx* out.log /i <msi>`) you will see:```Property(C): VersionNT = 603Property(C): VersionNT64 = 603```@tianon No worries. The fix only was just made today.
+SERVER-48073 is the correct ticket number
+Unfortunatly the errorcodes.py doesn't have this feature anymore, so there seems to be no way to get the errorcodes in any documentation.https://jira.mongodb.org/browse/DOCS-10757
+I think our toolchain should not be that special. I don't think it matters now if we did check, but if it did, that seems like a big problem.
+This is basically what I was doing with libc++ in third_party. I wonder - perhaps we might be able to unify those approaches so this is less of a "hack" and more of an "intended library injection" tool?
+I am leaning more and more into this needing to be a LIBDEPS tag somehow. These all do the same thing but have different names, and they all imply the same exception in LIBDEPS.
+> @dishytianxiang you can find the documentation for the server parameter here: https://docs.mongodb.com/manual/reference/parameters/#param.oplogInitialFindMaxSeconds>> You must set the parameter using [setParameter](https://docs.mongodb.com/manual/reference/parameters/#synopsis).how to confiure for findNetworkTimeout:getMoreNetwork Timeout?i can't find any parameter from ServerParameter?
+@leoxu8703 Please see the above comment on the Community Google Group. I no longer work at MongoDB, so the likelihood of having your question answered here is exceedingly slim.
+Nice
+Nice
+This is for `3.6.23`, not `3.6.18` as the commit message suggests.
+We have a requirement for benchmark testing in the 4.0.10 version.How can we run the benchmark test now without the perf tool?
+@deriamis Why was the python dependency not removed altogether. No file inthe package or rpm scripts in the RPM rely on python that I can tell.
+> @deriamis Why was the python dependency not removed altogether. No file in the package or rpm scripts in the RPM rely on python that I can tell.The Compass installer is a Python script, so Python should be a dependency at least somewhere here. That said, it does look like the Python dependency was never in the right place anyway - a fact which I missed in my change. I'll make another change to move the dependency down to the `-tools` package where it should be.
+@deriamis Thanks, that makes sense.I was trying to work out where it came from in the first place.
+is scons_cache_scope tag supported in v3.x?
+Since we are running into some CentOS8 combination issue, had to go through this diff. But Can you please letus know if scons_cache_scope tag supported in v3.x? Because searching this tag in v3.6 branch doesn't give any references in the build scripts. But i see the code in 4.x onwards. Is it a merge issue?
+Could these new parameters be optional?
+They could be, but we're always passing them and we always know it so I didn't make them optional.
+This broke the ODM since the two builder classes now have different method signatures for this method.
+submodule pointer from odm master wasn't updated to this commit at that pointso that shouldn't have broken anything
+i dont use the submodules else i would have 4 of each repository :)
+then don't update as frequently, we'll tag stuff when its ready.
+updated here for your development pleasure:) - 44d21f4b35a0c13c1c40453b0854413083e73eea
+No typo there, try running it
+what version of mongo are you running?
+I will have to make it bc then, as 1.7.3+ changes the results array a little, thanks for pointing it out
+Hmm, I am not sure about making it BC. The MongoDB ODM is still none stable software and I would like to keep it up to date with only the current stable mongodb version.
+fair enough, I would advice upgrading mongodb then, or downgrading the version of odm
+This test is failing. Instead of what the test expects, I see:```array('$and' => array(array('hits' => array('$gte' => 1),),array('hits' => array('$lt' => 5),),),)```Is the issue with the test or the code?
+Looks like an issue with the test.On Dec 3, 2011, at 12:56 PM, Excel Web Zonereply@reply.github.comwrote:> Weird.. the AND should work the same as the OR> --->> Reply to this email directly or view it on GitHub:> https://github.com/doctrine/mongodb/commit/96dffd456dd1da91bceedd04bdbd26d6ab7697e1#commitcomment-766502
+My mistake. I was searching ODM for the class extending Database and missed searching this repository :\
+I didn't test it for moment, I'm going to see that !Thank you a lot for this !
+I realize this is an old commit, but should this logic be moved into the GridFS class? We can override this method and then remove the file data from the chunks collection before passing along the return value.
+Sure.
+This seems to break a legitimate upsert:```$m = new Mongo();$g = $m->test->getGridFS();$g->drop();$g->update(['x'=>1], ['_id'=>1], ['upsert'=>true, 'safe'=>true]);```That should result in `['_id'=>1]` being inserted into `fs.files` (the match criteria is disregarded, since `$newObj` takes precedence).
+Why would this be a problem? If `$set`'s argument is an empty array, no fields will be set. Using `\stdClass()` would be more appropriate if we were actually setting a field to an empty array and mean it to be an empty object.
+@jwage: Any reason in particular that this conditional omits `$this->isDirty`? The `getSize()` method requires a dirty state before returning `filesize($this->filename)`.
+Is there any precedent for constructing MongoGridFSFile manually? The [essential metadata](http://www.mongodb.org/display/DOCS/GridFS+Specification#GridFSSpecification-{{files}}) is going to be missing, and it won't correspond to an actual file in MongoDB, so calling `getSize()` on it will return `null` and `getBytes()` will result in a MongoGridFSException ("couldn't find file size").
+I think I was trying to avoid refetching from the database after storing in order to get the objects I needed.
+I don't think so.
+I think this is breaking my ability to use doctrine/mongodb.i currently have ext-mongo 1.2, so i run a composer, it says"doctrine/mongodb dev-master requires ext-mongo >=1.3.1,<1.4-dev"so i update ext-mongo to 1.3.1 and run composer again and now it says"doctrine/mongodb 1.0.0-BETA2 requires ext-mongo >=1.2.12,<1.3-dev"So I'm kinda screwed because of this change :(Halp.
+Does `pecl install mongo-1.2.12` work?
+No, because then I get this error from dev-master:"doctrine/mongodb dev-master requires ext-mongo >=1.3.1,<1.4-dev"It's a catch 22.
+You would have to downgrade doctrine/mongodb to 1.0.0-BETA2. The error above looks like it's due to using the master branch, which now requires 1.3.1+ of the PHP driver (which ODM doesn't yet support).
+Why can't we made a new tag/branch for this commit without backward compatibility? Performance more important aren't it?
+@omgnull: I spoke to @jwage about this and we agreed it's best to have 1.0 support both drivers. The performance implications of the version check are quite trivial:``` php<?php$samples = 100000;$start = microtime(true);for ($i = 0; $i < $samples; ++$i) {version_compare(phpversion('mongo'), '1.3.0', '<');}echo (microtime(true) - $start) / $samples . "\n";```Output:```7.8979015350342E-7```
+@jmikola ok I get it. Another suggest is to check version only once at constructor and then check only boolean flag?
+This should not have been committed without also updating mongodb-odm because it breaks mongodb-odm. See Doctrine/mongodb-odm#460.
+ODM _was_ updated to require a previous version of doctrine/mongodb. See doctrine/mongodb-odm@29c6b58c9e65f5717aaea147600c702a4083b9c8
+Oh, I see, but it's a logical fallacy to assume everyone uses composer.
+@jwage: Any idea why this returns `$a` instead of the result, like `insert()` and `save()` currently do? Does ODM depend on it?
+This was never required because MongoCollection is mocked. Also, it was oddly passing even though `$result` was `true`.
+I don't think any reason exists. It should behave like MongoCollection::batchInsert() does.http://us2.php.net/manual/en/mongocollection.batchinsert.php
+After apply this change I obtain the next error:```Argument 3 passed to Doctrine\ODM\MongoDB\Hydrator\HydratorFactory::hydrate() must be an array, null given```
+doctrine/mongodb-odm#565 is the PR where I'm tracking ODM changes for this functionality. I'll make a note of this there.I would not rely on using 1.1.x of doctrine/mongodb until ODM's composer.json file is properly updated in a subsequent beta release.
+@henrikbjorn: Please let me know if this addresses your needs. All Collection events should now use MutableEventArgs for their results (where sensible), and the event class here will store changed data when necessary (in an attempt to use memory efficiently).
+Had to read this a few times to get that it means a cursor to _the_ results in an output collection.
+Hi Jeremy,The same change needs to be made in doctrine/mongodb-odm.Details here:https://github.com/doctrine/mongodb-odm/issues/643Guess this is an easy one for you to fix?Cheers,Steve
+@SteveTalbot: See my reply in https://github.com/doctrine/mongodb-odm/issues/643. Thanks.
+This also changes `group()`'s return value to an ArrayIterator of the actual results instead of the command response document. Currently, that means the `count` and `keys` result fields will be lost. In the future, ArrayIterator should be enhanced to store additional metadata (or perhaps a copy of the full command response).
+I think that should be 1.0.10
+Correct. Thanks for catching this!
+LGTM.
+why did you change the default value from `false` to `true`, did that change happen intentionally?
+No, looks like that one slipped through somehow. Thanks for catching it, I'll create a PR to change it back.
+ $this->expr->addOr(...func_get_args()); ?
+Are you referring to the splat operator (`...`)? That was added in PHP 5.6: https://secure.php.net/manual/en/migration56.new-features.php#migration56.new-features.splat
+thanks.
+Can the note about this alias be removed now? (Still trying to digest these changes!)
+Yes, I have changed it now.
+Mockery is only needed for tests, so that's why i included it only in Travis config.
+That's why I put it in require-dev. Makes more sense for contributors running the tests locally.
+I think that the `$text` operator can't be added like that in the list of `where` operators because this operator doesn't apply on a specific field but on all the indexed fields. That's why I use a query scope like that for now :``` PHPpublic function scopeWhereFullText($query, $search){return $query->whereRaw(array('$text' => array('$search' => $search)));}```You can see the doc : http://docs.mongodb.org/manual/reference/operator/query/text/
+I advise against this. It won't install Mongo automatically, but just fail if it can't be found.There's no value in that.
+It has advantages and disadvantages I guess. For example, if you use https://github.com/mongofill/mongofill you don't need the extension.
+I happen to use hvvm just to run composer, and that requirement makes it fail big time.My take is this: there may be a value to require extensions like mcrypt, because it's not obvious you need it to run a particular package. I see no value in requiring ext-mongo for laravel-mongodb, because it's pretty obvious you need to have a working extension or replacement, so there are only disadvantages.I encourage you to remove the requirement.
+What's the reason for that ? Is there PHP 5.5 specific code in the package ?`composer install` will fail with this configuration if PHP 5.5 is not installed.
+https://github.com/laravel/framework/blob/5.0/composer.json - L5 dropped support for 5.4
+It says `"php": ">=5.4.0"` for me?
+I'm not sure, read that : http://laravel.com/docs/5.0/installation#server-requirements
+oops, i was sure that L5 was meant to work only with 5.5
+I think they were considering it, but it wasn't pushed through.
+when these changes will be released
+These should be available in the 2.1.0 version.
+authentication works ok I just have a problem with timezone I have configured by default to use app.php America / Guayaquil but I recorded what would be the problem UTC
+PHP MongoDate toDateTime default timezone #441
+good
+Thank you! :+1:
+In new versions please use'options' => ['database' =>'admin' ]for proper authentication with Mongo 3
+Please merge this with the 2.2 branch as well!
+Can you guys create a release for this? - since others will have to change it manually (unless pulling from master) until you release.
+Worked for me for my fresh installation of 5.5.Thanks!
+Hey @jenssegers, was this intentional?
+Yes
+Would you mind explaining the change? We use embedded documents that don’t have `_id` as their key and this fix seemed like a sensible way to accommodate that. Can you suggest a better way of handling that scenario if this line of code assumes keys called `_id`?
+I was wondering the same thing. What is the workaround when someone wants to have different primaryKey other than _id?thanks
+Typo 
+This breaks our code. What if $id is not string, an array for example?```php$query()->where('_id', 'mod', [2, 1]);```
+Excellent work!
+To calculate totals and return a subset, you need to apply grouping and skip/limit to the same dataset. For that you can utilise [facets](https://docs.mongodb.com/manual/reference/operator/aggregation/facet/)
+My bad!I was using a MySQLesque notation for relationships, as in ```$this->hasMany(ModelName::class, 'model_name_id');``` instead of ```$this->hasMany(ModelName::class, 'model_name._id');```That's why I had made this change in case you were wondering.
+Guys, there is already Laravel 7 available. We want it! :)
+Thanks for the commit, I just applied it to master
+Wow, this is truly fantastic. +1. :-)
+This should actually be a normal for loop, will fix that
+!!!! :D
+Awesome.
+The benefit of having integration tests ;)
+FTW
+just caught another one,this line should be:var c, c1, c2, c3;
+This broke larger queries for me =(I was wondering why my request would only work when I had a console.log uncommented in my cursor.each loop.Traced it back to this update.
+Can you supply a breaking integration test?. Im considering changing each to be like the streaming API to avoid the deep callback stack that will break the old each
+Hey Chris, Sorry I tried and couldn't build a good "breaking" test.Even with the process.nextTick it was "working" albeit slower than I would consider usable.I'll keep testing and keep an eye out though.Let me know if I can help.
+if you are using each forget about it. It needs to die. Use the streaming api call with the event emitter.
+Why? Try to iterate through about 10k objects - you'll get stack overflow, obviously.
+It was a wrong assumption it's actually back in master I you look at the code
+Oh, sorry!
+you win :D
+Agree. The option `callback?, options` adds too much complexity
+Good! Its nice to see some refactoring of the collection module. I have this file open as a documentation.
+Yeah, I'll probably open a separate pull request for that one.
+This doesn't work - code below tries to access options[...], not this.options[...].Perhaps this would be better:```options = options || {};this.options = options;```
+This code effectively makes rs_name a non-optional option to the ReplSetServers constructor - if you don't provide rs_name, then self.replicaSet === undefined, and this test will always throw an error.Is this intentional?If so, then rs_name should probably be a parameter to the constructor rather than an option.If it's not intentional, then perhaps this could should be something like this?```if(replSetSelf.replicaSet == null) {replSetSelf.replicaSet = node["setName"];} else if(replSetSelf.replicaSet != node["setName"]) {...```
+`checkCollectionName` can throw so we should keep it wrapped in a try/catch and pass the error to the callback.``` javascripttry {this.checkCollectionName(newName);} catch (err) {return callback(err);}```
+Looking good. Just took a look at Cursor.prototype.getMore and that one needs some work yet too. I'll dig around more later today.
+I did some more cleanup, catching possible new Collection() errors when passing in a illegal collection name and catching and returning the error correctly
+@christkv i sent a pull request. there are more in there and as i have time i'll knock some more out. https://github.com/christkv/node-mongodb-native/pull/300
+This is a double callback.
+This is a double callback.
+This is a double callback.
+This is a double callback.
+cool. are you going to tag and npm this today?
+I got two more tickets to look at so probably tomorrow at some point
+yeah cool. no rush. just curious since it History was updated.
+Thanks - I neglected to run the native tests before my pull request, since OS X Lion broke my ability to compile temporarily.
+This commit broke a tool we wrote using findAndModify. If it can't find any documents, it should return null instead of throwing an error (or at least that's what the command line client does).See also https://jira.mongodb.org/browse/CSHARP-214 for a related error in the C# driver.
+the `hasOwnProperty` check is redundant here as Object.keys only returns own properties.
+yeah I realized it :) it's already removed but finishing support for a mongodb 1.9.1 feature (keepGoing parameter) that let's you do bulk inserts that keep going even though one or more of the docs have unique errors.
+nice
+The true Unix timestamp can be gotten with the first 10 characters of what generationTime returns:cursor[0]._id.generationTime.toString().substr(0,10)
+The way you have it, this should probably be checking for `logger.log`. It'd be nice if I could pass the error fn only, instead of having to pass log and debug too.
+more people are having problems pointing to some sort of basic deficiency in the model for connection handling. I'm going to outlay a plan for how to redo that layer and rework it as fast as possible. Can you meanwhile point me to the last "known" working version ?On Oct 4, 2011, at 6:28 PM, Aaron Heckmann wrote:> The way you have it, this should probably be checking for `logger.log`. It'd be nice if I could pass the error fn only, instead of having to pass log and debug too.> ##>> Reply to this email directly or view it on GitHub:> https://github.com/christkv/node-mongodb-native/commit/be0257aa335bba2c9acac2db16cbf8d93f174b15#commitcomment-629717
+I think this process.nextTick line should have been in the else case, before throwing the Error. This looks like it's going to run forever.
+I was thinking about this some more...This should probably be just a try / finally block instead of try / catch as you can't really handle the error here. Just moving the cleanup code to the finally block should work well.
+This `new Error` stuff causes the stack trace of the `err` to be lost.
+good point :) probably an oversight
+I'm going to only wrap if typeof err === 'string'
+Can this cause those connection state bugs we saw a couple months ago again?
+yes I think so but can't be certain, the new code will basically close the connection an issue an error correctly so you can recover. at this point the socket is dead anyway as there is no way to recover a valid state anymore
+Is there a downside to enabling keepAlive? Seems like maybe something to have on by default.
+Well keep alive is only useful if you got something like a firewall between your servers that close unused sockets. Otherwise not needed. Default in node is off so I kept that default.On Nov 24, 2011, at 17:17, Aaron Heckmannreply@reply.github.com wrote:> Is there a downside to enabling keepAlive? Seems like maybe something to have on by default.> --->> Reply to this email directly or view it on GitHub:> https://github.com/christkv/node-mongodb-native/commit/8e784d54d55bee7414710cad7a2440c2fde1ffc4#commitcomment-744601
+To be fair though JavaScript allows you to throw anything as an error. I'd be fine with non-error-instance error events.
+For issue #437:With 0.9.7-1.4 (on Node 0.6.5), the change from `destroy` to `end` prevents connections to servers with invalid hostnames (`invalid.host`, for example) from properly closing (thereby hanging the Node process).The connection's `_connecting` property is still `true` at this point (despite having emitted an `error` event), suggesting that this might be a Node bug.The upshot is that the tests still pass when this is changed back to `destroy`.Alternately, calling `self.connection.destroy()` in `errorHandler` addresses the issue I'm seeing while allowing the tests to continue to pass.Why was it changed in the first place?
+weird
+why won't it ever work?
+why why why would you extend natives in a browser?
+we should never do this. instead we should create our own helper that merely operates on arrays.
+it's going away, it's just there as a placeholder as I roll in support for Uint8Array
+:D
+the Uint8Array will let me use bson.js in the browser aswell. need it for the game demo and should let me split bson out as a seperate npm module
+Shouldn't this be``` jsself.commands.push({type:'query', 'db_command':db_command, 'options':options, 'callback':callback});```?
+well spotted. fixing
+As a side note, when does the driver will re-try theses commands ?I have a case where my first queries does not make it to the db because I'm in 'connecting' state.It seems that waiting commands should be unstacked by __retryCommandOnFailure but this function is only called when not connected so theses 'connecting' waiting commands never gets out.Should we have a setTimeout(__retryCommandOnFailure) here ?Then when Im connected, it's ok.
+you need to use auto_connect for it to trigger. while it's waiting to reconnect it will save all incoming queries in the commands list and replay them on connection.
+you need to ensure open has returned before issuing any commands
+I do use auto_reconnect that's why I was asking.At my node.js program start I do .open(.auth); then no matter if I wait 10 or 20s, the first request will always be trapped by theses lines.Do you mean I need to do .open .auth each time I want to issue a request ? Doesn't auto_reconnect solves this ?
+I don't know what your code is doing but you need to dodb.open(function(err, db) {//if db leve otherwise db.admin().authenticatedb.authenticate("a", "b", function(err, result) {// the rest of your app.});})if the driver is not started up correctly it's in an unknown state and any things fired during that period will be lost or cause undefined behavior.
+check outhttp://christkv.github.com/node-mongodb-native/
+Thank you, please, consider looking again at the process of adding a query to .commands :``` jsself.commands.push({type:'insert', 'db_command':db_command, 'options':options, 'callback':callback});```Looking at the code the only place I saw theses ,commands being unstacked is here : https://github.com/christkv/node-mongodb-native/blob/master/lib/mongodb/db.js#L1330 (__retryCommandOnFailure)But __retryCommandOnFailure is only called if there's no connection established : https://github.com/christkv/node-mongodb-native/blob/master/lib/mongodb/db.js#L1454So in the program flow I do not see how pushed commands could be re-run (connecting -> connected -> never re run). Thank you for your patience.
+the fix is in master :).it works :) because the first command that comes into a closed connection will retry and while it's retrying all other commands are buffered up. once the first command is execute it then fires off all the buffered commands. It's a bit difficult to figure out :). But it's battle tested code that took a while to get right due to the peculiarities of async code.
+I'm sorry I was mistaking, I'm using multiple node processes and one was not connected before trying to issue the first request. AH so much time lose! Thank you.
+good to hear you found the problem :). Thanks for spotting the bug :) I'm pushing a new version tomorrow I hope.
+This is the key part of this test, so it should be fixed in a different way than just commenting it out.Fundamentally, in the previous code the passed-in callback was never being called, so in this test we need to not just hang forever in the case where this is happening. I may have made an error with the setTimeout, but if this test were to fail, the test harness currently hangs forever.
+Why was this moved out of the prototype? Are we supposed to only use insert from now on?
+yes. it was actually never supposed to be exposed as insert handles arrays aswell
+thanks
+woot! why not just pass the result doc directly and remove the number affected param? If not now probably something we should do in the 1.0 release.
+will break everyone so probably not
+1.0.0 is a good time to make api changes. this is your chance to fix any api "problems" from the past two years
+yeah but I'm not breaking a fundamental one like that one mate :) I have enough other things to do than deal with the torrent of bug reports that I will have to explain away.On Mar 31, 2012, at 12:32 AM, Aaron Heckmann wrote:> 1.0.0 is a good time to make api changes. this is your chance to fix any api "problems" from the past two years> --->> Reply to this email directly or view it on GitHub:> https://github.com/christkv/node-mongodb-native/commit/157ed4cfd97112a303af207781a71e536326963a#commitcomment-1156667
+`single` or `simple`?
+single, have fixed and have in this case just forced pushed since it's just a single user who has requested this and he already emailed me
+:/On May 12, 2012, at 1:17 AM, Christian Amor Kvalheimreply@reply.github.com wrote:> single, have fixed and have in this case just forced pushed since it's just a single user who has requested this and he already emailed me> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/node-mongodb-native/commit/1218e22543d63b30180b454362e88637c26ef545#commitcomment-1323205
+jupp life is cruel but think of it like this nobody has ever used this feature EVER before with the exception of this single guy. I want 1.0.2 to be with the grid streaming stuff as soon as feasible.
+The following succeeded when:> Seeded with the Primary host first, or only seeded the Primary hostThe following failed when:> Only seeding the Secondary, fails with: 'not master and slaveok=false'> Seeding the Secondary first, fails with: 'unauthorized db:mongohq-production lock type:-1 client:127.0.0.1' 11 console.log("Start: " + new Date()) 12 new mongodb.Db.connect(sslReplicaSetConnection, function(error, client) { 13if (error) throw error; 14console.log("SSL Replica Set: " + new Date()) 1516client.collectionNames(function(error, names) { 17if (error) 18throw error; 19console.log(names) 20}) 2122connected++; 23if (connected === 3) 24process.exit(0) 2526 });
+I need more information to replicate it as the 1.1 branch seems to work correctly here1. The setup of the replicaset2. The actual sslReplicaSetConnection code3. Version of the db and node
+Just trying to work through all the scenarios
+Here is a gist of the different configurations to test: https://gist.github.com/9d2eb5d122147a9702e0You can comment out the different config settings -- I would have built tests, but I am not the best at node . . .Thank you,Chris
+I've added tests for the 1.1 branch and they pass, see the file below. The first test uses a primary for discovery and the second a secondary + primary. Server version is 2.0.4https://github.com/mongodb/node-mongodb-native/blob/development-1.1/test/auxilliary/replicaset_auth_discovery_test.jsNotice the last test where I've added slaveOk to the url so the secondary can query the state of the replicaset.
+Hey,It looks like the options which are passed to the ensureIndex are not send to the db properly. Things like name, i can see it created in the system.indexes. But when i set index with a background option, it is not seen there. How could one verify whether an index is background or not and it is correctly set.Thanks.
+Are the semantics of this change correct?_setTimeout_ configures the timeout for an already-connected, yet idle socket, while MongoDB's _connectTimeoutMS_ deals specifically with just the initial connection setup. It seems like you should be passing through Mongo's _socketTimeoutMS_ instead.
+`default:false` for now.
+socketOptions['connectTimeoutMS'] = replSetSelf._connectTimeoutMSshould probably only happen if that option hasn't been explicitly passed in.
+any chance this could fix an issue with connections and no activity experiencing some weird issues? I have noticed that after 20 minutes of no activity on any of the connections will result in a future request waiting for ~60 seconds before a failed to connect error is thrown. After that error is thrown a new connection is automatically created and everything works fine again. mongodb logs don't show an end connection for anywhere between 37 and 170 minutes. If I create a really simple setInterval and make a request every 60 seconds I never experience this problem. Needless to say it is driving me nuts!UPDATE: I should state that I'm using mongoose 3.1.2
+this will likely not fix that issue. you should try to set keepalive and timeout. are you also doing this through a firewall ? after 10 minutes of no activity mongod closes a connection. if the end signal is not reaching the driver it means something is consuming it between the db and the driver my guess some sort of firewall.
+@sberryman mongoose 3.1.2 is using 1.1.7 so maybe test again with this change and post your results back here.
+oh nvm
+@aheckmann what is the best way to set config params for the native connection? I'm passing them in as part of the connection string as the first arg for mongoose.connect. I see you have an issue created to provide better explication of connect and createConnection and am really looking forward to that being added to the documentation. I'm using mongoose.connect right now and again, passing the config params by doing something along these lines:```mongodb://[user]:[password[@[host]/[database]?wtimeoutMS=2000;connectTimeoutMS=2000;socketTimeoutMS=20000```
+@christkv thanks for that 10 minute comment. I finally tracked down the article on http://www.mongodb.org/display/DOCS/Troubleshooting#Troubleshooting-Socketerrorsinshardedclustersandreplicasets which pointed me to tcp_keepalive_interval which was the default value of 7200 (7200000 on solaris) and changed the value to 5 minutes. BAM no more issues with MongoDB or Redis. I only wasted 4 days on this but glad it appears to be behind me.
+@sberryman I updated the api docs with some more examples for now: http://mongoosejs.com/docs/api.html#index_Mongoose-createConnectionin a nutshell, you pass an options object after the uri.
+should this be `dbOptions.safe = 'true' == value` ?
+yes good catch but functionally it will work :) as strict and safe are interchangeable (strict was just the old old name)
+hopefully once we switch to safe on always we can get rid of the message, but at least it's now annoying enough for people to set safe :)
+it doesn't work in mongoose. a bunch of tests fail b/c of strict behaving differently than safe.
+a bunch meaning 20
+primarily its b/c strict is picky about ensuring collections exist before use vs safe which doesn't care
+yeah but setting safe on the db level sets strict so it's the same variable.On Oct 8, 2012, at 8:00 PM, Aaron Heckmann notifications@github.com wrote:> primarily its b/c strict is picky about ensuring collections exist before use vs safe which doesn't care>> —> Reply to this email directly or view it on GitHub.
+if we get disconnected, do we ever get reconnected? looks like our health checks will not be restarted if we get reconnected.
+:+1:
+still fails for me when the authenticated user does not have access to the admin db.putting a test flow together now.
+So after this change, the entire first half of this function (which in today's version of the code calculates the variables length, chunkNumber, and previousChunkSize) seems to be an elaborate no-op: none of those variables are ever read! (Also, self.previousChunkSize is never written in today's code.)Is all of this intentional?ie, is the correct fix here to remove the first half of the function, or should that calculated length actually be used?
+can you just add a preliminary issue so I don't forget to check it properly tomorrow.
+Sure, #762!
+Any chance you could publish this to NPM?Thanks!
+The options passed to the aggregate call, is not passed through the db command. Like for example, i am trying to send the readPrefrence and that never reaches down, because of the line1513 : options = args[args.length - 1].explain ? args.pop() : {}
+this commit causes my cursor_tests to fail intermittently.
+snake case and camel? we should chose one and stick with it.
+camel as it seems to be the javascript thing I'll see if I can fix it monday.On Jan 25, 2013, at 8:04 PM, Aaron Heckmann notifications@github.com wrote:> snake case and camel? we should chose one and stick with it.>> —> Reply to this email directly or view it on GitHub.
+In my project I overwrite Cursor.nextObject in my custom cursor to create objects of custom type (transform mongodb objects to my high level objects). After this commit I can't do this so elegantly. So I'm stick now on 1.2.8. In my opinion this is sacrifice of flexibility in flavor of small performance improvement.I can't check right now how this can be fixed without reverting. This is my feedback...
+hello,ask a question,why not have the driver for asp 64bit? i like use javascript of server side with iis6 but iis7 need 64bit, can i get the driver? THANK YOUA LOT! need you help.
+it has both 32 and 64 bit. If you use the 64 bit windows node version it will use the 64 bit extension for bson. If you still have problems set native_parser to false to use the js only version.
+thank you very much,can i get the Examples for asp?build db,build object!thank you.
+node can install mongodb,the 64bit windows node drive downlad address?it have the dll files?how createobject db use asp? thank you.
+http://www.nodebeginner.org/
+mongodb.org write this:JavaScript Language Center¶MongoDB: •Can be used by clients written in JavaScript.but how?used by clients written in JavaScript.?Examples.thanks
+need to update this too.
+thanks just did missed that
+what are we testing here?
+Nothing at the moment as its broken in mongos but in theory you can return a partial result even if a mongos is down but its not working as off now
+This doesn't belong in findOne IMO. It's a different query. I'd say its developer error to pass a string and we should throw. If this belongs in the driver at all, it should be a new method named something like findById.
+This also creates an imbalanced api in that documents with other _id types get different behavior. Again, we should move this to a new method for _id lookups which supports any type (buffer, number, string, oid, etc).
+I'm removing it tomorrow as for api changes got to wait for the new fluid spec for 2.0
++1
+Looks like this fixed #979 and not #976 which is mentioned in the commit message?
+Did you push this to 1.3.6 when that was a version that already existed? (And didn't update HISTORY?)
+that was a mistake due to how my publish script works. I just pushed the right version 1.3.7 out that should have been this one. Good thing there are only small changes in this release.
+npm publish?
+Is there a way to get the same kind of robustness around `db.command`? For example the dereferencing of result in count() fails on db errors.
+can you provide an example in code ?. by default command will not look for errors as this would change the current semantics and be backwards breaking. The possibility would be to provide an override option for command to check for and emit errors if detected in the result.
+Not sure what causes it, but we get dereference null exceptions on lines like https://github.com/mongodb/node-mongodb-native/blob/7c5c55b6d17fecb82e0310044792cd425c79172d/lib/mongodb/collection.js#L584Without understanding mongodb more I can't reproduce this besides in our production environment
+please publish to npm.
+Weird I pushed it to npm 2 days ago.Will re push later got to put the kids to bedSent from Samsung Mobile-------- Original message --------From: Aaron Heckmann notifications@github.comDate:To: mongodb/node-mongodb-native node-mongodb-native@noreply.github.comCc: Christian Amor Kvalheim christkv@gmail.comSubject: Re: [node-mongodb-native] Fixed memory leak issue caused by not recognizing undefined correctly as a value in _events, Issue #1059 (8a31908)please publish to npm.—Reply to this email directly or view it on GitHub.
+nice
+it's for #1120 and also works for mongos
+do you think there would be better verbs than left and joined ?
+Sorry if this is not the right place for the question, but due to recent changes in the code (Db.prototype.command function?)monogoose plugin for Text Search stopped work.This is simple plugin with one major file: https://github.com/aheckmann/mongoose-text-search/blob/master/lib/index.jsCan anyone help me fix this plugin?In database the command look like this:db.collection.runCommand( "text", {search: "some query string"} );I need one hint how to run db.command(selector, options, callback) to get similar like above example.
+Thanks!
+:heart:
+hopefully 1.4 will be out in the next 2 weeks or so just closing some mongodb 2.6 support things
+@christkv default checkKeys: true is opposite to what is specified here https://github.com/mongodb/node-mongodb-native/blob/1.4/lib/mongodb/commands/query_command.js#L53is there any good reason why these 2 are opposite?After updating to v1.3.20 we started seeing errors when using dots and dollars in the command query hash, because of updating BSON dependency to 0.2.3This is a breaking change in the API and should not be treated as a minor change (1.3.19 to 1.3.20).Also I think the BSON change should be listed in this changelog http://mongodb.github.io/node-mongodb-native/changelog/changelog.html
+`0.2.4` or `0.2.5`?
+typo 0.2.5
+Yay! I'm contributing!Shall I send a pull request? ;)
+I think you meant``` this.logger.debug("writing command to mongodb", {binary: binaryCommand, json: command});```i.e. no `[i]` after `command`.
+do we want to make this behave like node >= 0.10 streams and _not_ begin emitting data immediately? instead be pull based?
+I believe that it makes sense to initially pull all the data out from the main cursor object and push it to the cursor stream.So, yes, it will emit both 'data' and 'readable' immediately, but by listening for the 'readable' event, you should still be able to digest the documents read by read.Given our use case, a Transform stream seemed like the most natural and flexible implementation, and I am not sure if there is an elegant way for a Transform stream to be strictly pull-based the way a straight Readable stream is.
+Would this be true in any situation? If it's not object, there is no `_type` field. This block does not seem to check non ReadPreference object instances for validity.This is 2 years old :) So I decided to comment first instead of sending a pull request, I might be missing something.
+Note to self: this needs to be brought back.
+@christkv - what's the reasoning behind setting `process.maxTickDepth = Infinity;` here. This is rather heavy handed and was masking some heavy `process.nextTick` recursion in our app. Why is this necessary for mongo to do?
+because they changed the behavior of nextTick and will change it back again for the next node version. this was the only way to work around the issue caused by the 0.10.x mess.
+So potentially node-mongodb-native causes some very deep `nextTick` recursions? Reading the comment on line 167 suggestions using `setImmediate` on 0.10 which seems to me to be the right approach for the current version of node. Is there a good reason for sticking with `process.nextTick` right now?
+unfortunately setImmediate has it's own issues in 0.10.x so right now it will stay as is until the 2.0 driver is ready which replaces the whole core of the driver with something less reliant on both nextTick and setImmediate
+Ok, thanks a lot for the clarity. I'm working on some similar stuff in Meteor core at the moment, if you have a link handy would you mind pointing to a thread or issue regarding the problems with setImmediate in 0.10.x? Thanks again.
+I don't have a specific link it's just impossible to properly pass the full test suite of the driver using it, and it's not clear why. Since they are abandoning it in 0.12.x I put no further effort into trying to figure out what changed.
+since the maxTickDepth is set at module initialization you can set it back to some more reasonable number in your app after the mongodb require. in most cases it will not affect your code. it mostly impacts very very long running cursor queries.
+I know this is an old commit, but the code here seems odd to me.You subtract _index and add 1 to the return value of this function, but never assign the result to anything. Shouldn't this be related to the `documentLength` value that is used in the other serialization call below ? Also, this writes something more in the buffer, but the code calculating the `totalLengthOfCommand` did not change. I would have thought that if you add more stuff to the command, the calculation of the size of the command should be amended too.I opened bug [NODE-278](https://jira.mongodb.org/browse/NODE-278) which seems related to this new line of code, but I wanted to offer my observation about the line here instead. I hope this is ok with you.
+`MongoError` is undefined
+`return findOne.apply(this, args)`
+general best practice when overriding fns so it still supports the original method return values
+good catch
+``` javascriptm.current(function(err, version){if(err) throw err;console.log('Running tests against MongoDB version `%s`', version);});```
+Hey Christian, why was this behavior added? The 1.4 driver definitely doesn't throw if you don't set the replica set name in the connection string.
+Tightened it to ensure people specify the replica set name and make itexplicitOn Jan 6, 2015 5:16 PM, "Valeri Karpov" notifications@github.com wrote:> Hey Christian, why was this behavior added? The 1.4 driver definitely> doesn't throw if you don't set the replica set name in the connection> string.>> —> Reply to this email directly or view it on GitHub> https://github.com/mongodb/node-mongodb-native/commit/4d4ab9d147dfd75f64dbc3169e546879486a4233#commitcomment-9170853> .
+Is this part of an existing connection string spec and/or do other drivers do it? I know this particular change will break some of my code, so I'd like to make sure there's a good reason for it.
+Its by choice from the server monitoring and discovery spec. Due toproblems in the past with mixed replicaset seed list issues. I can relax itif need picking the first replicaset name as the valid one but I rather notunless there is a very compelling uscase im missingOn Jan 6, 2015 5:44 PM, "Valeri Karpov" notifications@github.com wrote:> Is this part of an existing connection string spec and/or do other drivers> do it? I know this particular change will break some of my code, so I'd> like to make sure there's a good reason for it.>> —> Reply to this email directly or view it on GitHub> https://github.com/mongodb/node-mongodb-native/commit/4d4ab9d147dfd75f64dbc3169e546879486a4233#commitcomment-9171332> .
+Makes sense. Its a "may" in the server discovery spec, so sounds reasonable to me. Do we note this in the documentation?
+Not sure open a ticket so we remember to checkOn Jan 6, 2015 6:08 PM, "Valeri Karpov" notifications@github.com wrote:> Makes sense. Its a "may" in the server discovery spec, so sounds> reasonable to me. Do we note this in the documentation?>> —> Reply to this email directly or view it on GitHub> https://github.com/mongodb/node-mongodb-native/commit/4d4ab9d147dfd75f64dbc3169e546879486a4233#commitcomment-9171741> .
+See NODE-345On Tue, Jan 6, 2015 at 12:19 PM, Christian Amor Kvalheim <notifications@github.com> wrote:> Not sure open a ticket so we remember to check> On Jan 6, 2015 6:08 PM, "Valeri Karpov" notifications@github.com wrote:>> > Makes sense. Its a "may" in the server discovery spec, so sounds> > reasonable to me. Do we note this in the documentation?> >> > —> > Reply to this email directly or view it on GitHub> > <> > https://github.com/mongodb/node-mongodb-native/commit/4d4ab9d147dfd75f64dbc3169e546879486a4233#commitcomment-9171741>> >> > .>> —> Reply to this email directly or view it on GitHub> https://github.com/mongodb/node-mongodb-native/commit/4d4ab9d147dfd75f64dbc3169e546879486a4233#commitcomment-9171955> .
+npm?
+and thanks !
+it's been pushed as 1.4.28. I do think though that if you are using fullresults which was a hack to support meteor better you are better off looking at 2.0.x
+yeah i'm planning on that. might also just go directly with mongodb-core. we'll see. thanks again Christian.
+be aware that with mongodb-core you'll have to handle all the error handling yourself and that there are not helpers for anything :) so you need to call commands yourself :)
+version 2.15 has not been pushed to npm
+it's not done yet. it only get's pushed after I add the release date. until then the history serves as a list of things done for that release until this point. I hope to push this week but I'm investigating some test failures that I have to pin down to either 3.0.0 mongodb behavior or errors in the code.
+@christkv , the problem is on this line, and it's not fixed by this commit.
+The test should try to call pipe() method, I guess.
+npm please ;D
+:+1:
+Why we have a **single colon** check here with the error message "double colon in host identifier"?
+it's checking for invalid colones in the path /some:pathos:other
+What conditions might cause this line to be reached? This occurs occasionally for me and appears to be related to large result sets.
+Can you give some sort of feedback when this one is published? Thank you!
+I'm waiting for 2 fixes for gridfs to be done before it's published. As soon as that happens it will be out.
+@christkv thanks a lot, we've been having problems with that one since thursday/friday and we couldn't manage to find out what was going on. Great job on it.
+the refactorings done in core means that there is a possibility that there are no available connections at some point (it's a worker queue model now pull messages to send). I frankly just missed this and my test cases did not catch it because the count command was not executed under load.
+@christkv don't worry about it... As soon as you have it, message me so I can change back to get the latest dependecy. Great work and thanks a lot!
+2.1.7 is out with the fix.
+This seems to be a duplicated test from `abort` for `destroy`, now that `destroy` is removed, the whole test is not needed anymore.
+abort() is different for read streams and write streams, so IMO not redundant.Thanks for the detailed review of the PR :)
+There are currently 3 tests:- ReadStream destroy which was renamed abort: l467:`exports['Destroying a download stream']`- WriteStream abort: l341:`exports['Aborting an upload']`- WriteSream destroy which was copied from abort, and now is useless: l403:`exports['Destroy an upload']`
+Ah good point I missed that, my PR changed considerably since I last checked.
+When is this going to be released as a version on npm? It is preventing the usage of mongo connection strings. Thank you.
+Unsure as to whether this is a bug being un-noticed for so long, or if it is truly meant to be returned like this, using```var finalIds = new Array(keys);````finalIds` would actually have the initial value of keys, rather than the believed intended initial value of an empty array with the same length as keys which would be achieved using```var finalIds = new Array(keys.length);```
+@christkv shouldn't this be "1.3.12"?
+you are right fixed and published in 2.1.13
+this `if` is not needed anymore
+Hi,As an agile tester I would like to contribute during my off time.Can someone please advice?Cheers,rico.kaseroni@yahoo.com
+Why is `Collection.prototype.findOne` being deprecated?
+What is the purpose of assigning a named function to a variable with the same name??
+Wow, that was quick!Thanks for your help @christkv
+Is this a breaking change? Made an issue on the JIRA for it [here](https://jira.mongodb.org/browse/NODE-899).
+I've added a fix to allow for backward compatibility
+It's linked to from this blog post, but moderately hard to Google if just looking for say `SDAM MongoDB`:https://www.mongodb.com/blog/post/announcing-the-server-discovery-and-monitoring
+`git commit --allow-empty`
+Travis has a «Restart build» button :wink:.
+@christkv I can't seem to find the definition for this method. Actually this throws an error `ReferenceError: addAuthSession is not defined`. But since no one reported this as a bug, I'm wondering whether am I missing something. 😳 
+it's an internal method that is not a public api method
+This commit seems to have broken the build.
+nah it's just travis being flaky
+This broke all the things.
+@christkv is there an ETA for 3.0.0?
+When 3.8 launches but once the API changes settle and it's passing the test suite I'll probably push a 3.0.0-alpha1 for library users. Most changes are around moving all the connectivity stuff to MongoClient and getting rid of the authenticate method that will not work for 3.8 and higher and is suspect for earlier MongoDB versions.
+looks like mongodb-core versions are wrong in HISTORY.md for versions 2.2.31 and 2.2.30
+Does the updateOne method no longer support passing in a document as `update`? That won't have a "$" and implicitly an "atomic" operator?
+@toszter yes, this has been deprecated for some time now, and is specified as having to work this way.You can read [the ticket](https://jira.mongodb.org/browse/NODE-965) for more information as to why this behavior is dangerous.Also, to answer your question from the SUPPORT ticket, this _is_ a breaking change, but the 3.x release of the driver will indeed break a number of other things being that its a major release, so this is to be expected.We are documenting these changes in the `CHANGES_3.0.0` file, which I will remind one of our developers to update with this information tomorrow
+Hi.I came here to see what changed in project before I update my project dependencies. What is meaning of changing just version number in commit ?
+This is the standard behavior of `npm version <level>`, it serves as a clear marker between versions.
+sorry to bother you, was wondering what this line do :```jsif (typeof options === 'function') (callback = options), (options = {});```
+It's a compact way to let calls like:```jsdb.createCollection('name', function(err){ });```It just check if _options_ is a function, then _if true_ it assumes it is the callback.Check```jsif (true) (console.log('a')), (console.log('b'));```Prints _a b_```jsif (false) (console.log('a')), (console.log('b'));```Prints _nothing_
+Thanks, didn't know we can do this now, is this part of a new ecmascript version ?
+as far as I know this has always been a way to write compact code. Another way could be:```js"function" === typeof options && (callback = options, options = {});```some code linters like eslint (the one node-mongodb-native uses) would warn not to use expressions with assigments inside. I haven't checked if it's configured to warn here.Note: https://github.com/mongodb/node-mongodb-native/blob/2.2/.eslintrc is the configuration file for eslint in this project.
+Nice, thank you very much for these explanations !
+:+1:you are welcome
+Dan,What is the correct way to connect after upgrading from 3rc0 ?I noticed [this issue](https://jira.mongodb.org/projects/NODE/issues/NODE-1240?filter=allopenissues) is open for docs also, thx
+@sbr464 the buffer max entries are now picked up from the passed in `options`, rather than from a passed in `Db` instance. This change has simply made all three topology types consistent in this regard.Also, generally you shouldn't be connecting this way. This is the connect method directly on a topology instance, and most cases (99%) should simply be using `MongoClient.connect`
+Where are the instrumentation endpoints exposed now? With the removal of the `metadata` class, any APM modules that relied on it for knowing what to wrap broke. The driver documentation for Node still [references this information as available](http://mongodb.github.io/node-mongodb-native/3.1/reference/management/apm/#instrumentation).What are APM vendors supposed to use now to instrument Mongo?
+Hi @NatalieWolfe, the instrumentation (APM) API in 2.x of the driver did not follow our driver specification for command monitoring, so it was replaced with a more robust implementation in 3.x. APM is now accomplished by setting the [monitorCommand](https://github.com/mongodb/node-mongodb-native/blob/master/lib/mongo_client.js#L110) option, and then listening to the `commandStarted`, `commandSucceeded`, and `commandFailed` on a `MongoClient` instance. Also, the `instrument` API still works as before, with a shim [Instrumentation](https://github.com/mongodb/node-mongodb-native/blob/master/lib/apm.js#L4) class still provided, however you cannot "uninstrument" as you once could.Also, please open a JIRA for questions in the future. We would like to capture these types of conversations for the benefit of other users.
+JIRA was going to be my next step, I wasn't sure which you preferred. I have now opened this JIRA to continue the conversation: https://jira.mongodb.org/browse/NODE-1571
+nice solution
+Hi, since the update to 3.2.1, I get this error when I try to start node and it seems related to this code specifically, I do not know how to fix it, any help would be appreciated.using npm@6.9.0using node@v8.10.0```/root/294-cms-section-blog-listing-components/node_modules/mongodb/lib/async/async_iterator.js:3async function* asyncIterator() {^SyntaxError: Unexpected token *at createScript (vm.js:80:10)at Object.runInThisContext (vm.js:139:10)at Module._compile (module.js:616:28)at Module._compile (/root/294-cms-section-blog-listing-components/node_modules/pirates/lib/index.js:99:24)at Module._extensions..js (module.js:663:10)at Object.newLoader [as .js] (/root/294-cms-section-blog-listing-components/node_modules/pirates/lib/index.js:104:7)at Module.load (module.js:565:32)at tryModuleLoad (module.js:505:12)at Function.Module._load (module.js:497:3)at Module.require (module.js:596:17)at require (internal/module.js:11:18)at Object.<anonymous> (/root/294-cms-section-blog-listing-components/node_modules/mongodb/lib/cursor.js:207:44)at Module._compile (module.js:652:30)at Module._compile (/root/294-cms-section-blog-listing-components/node_modules/pirates/lib/index.js:99:24)at Module._extensions..js (module.js:663:10)at Object.newLoader [as .js] (/root/294-cms-section-blog-listing-components/node_modules/pirates/lib/index.js:104:7)at Module.load (module.js:565:32)at tryModuleLoad (module.js:505:12)at Function.Module._load (module.js:497:3)at Module.require (module.js:596:17)at require (internal/module.js:11:18)at Object.<anonymous> (/root/294-cms-section-blog-listing-components/node_modules/mongodb/lib/command_cursor.js:7:20)npm ERR! code ELIFECYCLEnpm ERR! errno 1npm ERR! graphql-test-server@1.0.0 start: `babel-node index.js --presets @babel/preset-env --plugins @babel/plugin-transform-destructuring,@babel/plugin-syntax-throw-expressions,@babel/plugin-proposal-async-generator-functions,@babel/plugin-transform-async-to-generator`npm ERR! Exit status 1npm ERR!npm ERR! Failed at the graphql-test-server@1.0.0 start script.npm ERR! This is probably not a problem with npm. There is likely additional logging output above.npm ERR! A complete log of this run can be found in:npm ERR!/root/.npm/_logs/2019-03-22T10_51_29_931Z-debug.log```
+@wangrenyn If you we're trying to reply, I think your comment was cut off? 
+@simplecommerce would you mind opening a JIRA ticket for this? It's difficult to have comment threads on individual commits. In the ticket, could you please tell us if there is anything special about your application (are you webpacking for instance)? We run integration tests against node carbon on both travis and evergreen, and I just did a test run locally with v8.10.0 specifically and it's running without this issue.
+The lead paragraph mentions `removeOne`.
+The lead paragraph mentions `remove`.
+Worth adding an example for `replaceOne` and addressing the use case of wanting to construct a replacement object based on the document returned by `find()`, which as far as I can see, is not possible, and requires transactions.
+is it possible this could break connections on CentOS? half of our servers were offline for hours this afternoon and this is the only thing I can find that might have caused it
+`TypeError: Cannot read property 'payload' of null.` We are getting these errors every now and then in our app, so it would be great to get that fixed 🙂
+This looks like you're running into [NODE-2390](https://jira.mongodb.org/browse/NODE-2390). It's in progress, and we'll have a patch release this week. 
+Perfect, thanks! 🤩
+Leftover?
+yep, thanks for pointing this out. Fixed in 38ae86d8b89608d9d34c7321f8e0c0f3b97ab5ef
+This file should be named `types.ts`. `d.ts` is for distribution or types overwriting only.
+this is update the illegalCommandFields to anther way right ??
+Was this meant to be `ismaster.minWireVersion`
+Thanks for catching this, I've made the fix should be in soon. https://github.com/mongodb/node-mongodb-native/pull/2690
+Was this meant to be `Object.entries(urlOptions)`
+The idea here was to take the `options` the user provides as an object (the second param to the MongoClient constructor) and turn it into a Map to be iterated over. `urlOptions` is similarly a Map of the options from the searchParams of the connection string. Hope that clarifies this
+Hi,Thx for this commit which solves #2744.This function is used with four args in `lib/db.js`, also why not naming it `mergeWriteConcern` if it's not taking any boolean ?Have a nice day !
+Hello,Good catch on the mismatch number of arguments, I'll see to patching that.Even with the boolean removed my intention of the naming was to hint to the next dev what is going on here. It wasn't clear to me at first that it only merges WC options if there are none present on the existing object, so I went with extra descriptive just in case.Apologies that this overrode that work, but thanks for your contribution on #2744! I'll close that out but please feel welcome to contribute again in the future if the opportunity arrises. 
+Great, thx for your answer ! Do you know when the 3.6.5 (or 3.7) will be released ?
+Is there a benefit to making the run statements flat?
