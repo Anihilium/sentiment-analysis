@@ -1,0 +1,10 @@
+this was just a test.
+lol ;)
+Looks like a typo here:http://github.com/mongodb/mongo/commit/2b7eb102159a36129222afa1883ea3b15145e08b#L0R40See &7 instead of &&
+Bravo :)
+Good to see I'm not the only one improving error messages!
+Is it necessarily a good idea to have class diagrams in the visual studio projects? These projects will always be an afterthought (and rightly so) to the scons project.
+that's an accident.will remove.
+Confirmed that actually worked.
+Shouldn't the constant MaxBSONObjectSize be used instead? In case one wants to customize the size.
+stoll() doesn't exist in Visual Studio 2008. I'm installing the windows 7 SDK to see if that will rectify it, but perhaps even being dirty and calling atol() would be better than causing build problems.
