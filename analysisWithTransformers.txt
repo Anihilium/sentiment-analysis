@@ -1,0 +1,213 @@
+this was just a test.	NEGATIVE	0.9926994442939758
+lol ;)	NEGATIVE	0.9810318350791931
+Looks like a typo here:http://github.com/mongodb/mongo/commit/2b7eb102159a36129222afa1883ea3b15145e08b#L0R40See &7 instead of &&	NEGATIVE	0.9976865649223328
+Bravo :)	POSITIVE	0.9945923686027527
+Good to see I'm not the only one improving error messages!	NEGATIVE	0.9841434359550476
+Is it necessarily a good idea to have class diagrams in the visual studio projects? These projects will always be an afterthought (and rightly so) to the scons project.	NEGATIVE	0.9984163641929626
+that's an accident.will remove.	NEGATIVE	0.9981513619422913
+Confirmed that actually worked.	POSITIVE	0.999515175819397
+Shouldn't the constant MaxBSONObjectSize be used instead? In case one wants to customize the size.	NEGATIVE	0.9992570877075195
+stoll() doesn't exist in Visual Studio 2008. I'm installing the windows 7 SDK to see if that will rectify it, but perhaps even being dirty and calling atol() would be better than causing build problems.	NEGATIVE	0.9988746643066406
+The older, more conservative function is _strtoi64()Fix in http://github.com/zippy1981/mongo/commit/f7b7c07e2a72011b8dbd72d10dcbaa22d8e5fb54Stackoverflow discussion is in http://stackoverflow.com/questions/3106026/is-there-a-stoll-stroll-string-to-long-long-alternative-in-visual-studio-20/3106060#3106060	NEGATIVE	0.998152494430542
+Dwight,Shouldn't we also check the error cases?I'll confess I'm not running the unit tests on my machine. I'll start doing that.	NEGATIVE	0.9990084171295166
+sure.UnitTest is something that runs at every server startup.so they must very light and fast."real" tests should go in dbtests / test binary (or jstests if applicable)running tests v good idea.see "smoke" page on wiki	NEGATIVE	0.9968453049659729
+The UTF-8 BOM, signifying nothing, and annoying the hell out of developers and users.	NEGATIVE	0.9997432827949524
+Was the near/far thing a 64 bit thing? I though the near/far dated back to win16 programming?Regardless, it compiles.	NEGATIVE	0.9923588633537292
+vs2008 vs vs2010 issue	NEGATIVE	0.949441134929657
+don't comment out the lines in the method, just comment out doTest() etc...makes it easer to test, etc...	POSITIVE	0.8146459460258484
+Eliot, please roll this commit back. I found a bug with it. I didn't think you would include it until I made a pull request to you. Thanks, Tony	NEGATIVE	0.9875017404556274
+Wouldn't "-o -" be more inline with unix convention than "-o stdout"? Or is the problem boost parsing?Then again, part of me thinks default mongodump behavior should be to stdout, and there shoulld be a new switch for current default behavior.	NEGATIVE	0.9993363618850708
+Double build break, double my bad. I'll have to start building on ubuntu to check these things.	NEGATIVE	0.9954041838645935
+Won't this catch use of small oplog size when used with an arbiter? In your docs you recommend using a small oploghttp://www.mongodb.org/display/DOCS/Adding+an+Arbiter	NEGATIVE	0.9897909164428711
+right.will take it out.	POSITIVE	0.9997563362121582
+Could InterLockedExchange be used on windows and __sync_xor_and_fetch when GCC is used?For windows:http://msdn.microsoft.com/en-us/library/ms683590(v=vs.85).aspxFor GCC:http://gcc.gnu.org/onlinedocs/gcc/Atomic-Builtins.html	NEGATIVE	0.9974939227104187
+There is no way to make it cleaner using boost::filesystem ?http://www.boost.org/doc/libs/1_45_0/libs/filesystem/v2/doc/index.htm	NEGATIVE	0.9994893074035645
+detects int overflow in passed 2d bounds/parameters	NEGATIVE	0.9619932174682617
+Major change here is basically to pull up the expand algorithm into the superclass.	NEGATIVE	0.9953621625900269
+You also need to make a similar change within void ReplicaSetMonitor::_checkHosts():Line 297: log(1) << "updated set (" << _name << ") to: " << getServerAddress()Perhaps more places as well.	NEGATIVE	0.998238205909729
+The one you mentioned should be that way i believe.	POSITIVE	0.9974968433380127
+Why not checking that scale is a multiple of 1024 ?	NEGATIVE	0.9973618388175964
+Won't this mean you can step down a primary (and assuming a busy website load) 10 seconds of data may be lost?I would have thought you would want to have no lag what so ever, otherwise you need to specify force: true, instead of allowing 10 seconds of lag time?	NEGATIVE	0.9990546107292175
+perhaps, this would extend "life" for SERVER-3016 issues ?	NEGATIVE	0.9977805614471436
+OMG thank you for fixing this.Personally a victim of it. :)	NEGATIVE	0.9978998303413391
+Haha, you're welcome :)	POSITIVE	0.99968421459198
+backport?	NEGATIVE	0.9925916194915771
+The formatting on this is off.Also, this will be kind of slow since its going to cause an error every time.We need to check and see if there actually is a prompt() function.	NEGATIVE	0.9997801184654236
+Should make it possible to write "uassert( 0, "blah blah", x > 3 );", which will then get translated on first build / first errorcode check to uassert( <next errorcode>, "blah blah", x > 3 );"	NEGATIVE	0.9993566274642944
+alloc deleted freelist allocation chaining	NEGATIVE	0.9948181509971619
+Damn, I'm glad I'm not as stupid as the guy who wrote this.	NEGATIVE	0.9943404197692871
+that's harsh :-)what's wrong with it	NEGATIVE	0.9997745752334595
+in mongo assert is defined even in release builds.thus this works.the idea is that this notifies if the buffer is too small.strncpy would work but you wouldn't get any notification.this should never happen thus the abort.	NEGATIVE	0.8177763819694519
+Excellent. Disaster averted.I think this commit just got passed around because it's very difficult to tell that assert has non-default behavior.	NEGATIVE	0.9843152165412903
+what's wrong with assert? it works doesn't it?	POSITIVE	0.6098965406417847
+I believe it was passed around because apparently this engineer never heard of strncpy(3).	NEGATIVE	0.9978991150856018
+it means that the db will allocate 3GB right off the bat and take a while to start.May be quite painful for someone just testing the db.I guess we'll have to remember to tell people to use --smallfiles when trying out mongo.	NEGATIVE	0.9995852112770081
+This line does not affect mongodb parameters in Debian.Admin should create /etc/default/mongo or hotfix start/stop script.	NEGATIVE	0.9936313629150391
+The same as dbpath — does not affect mongodb parameters in Debian.Admin should create /etc/default/mongo or hotfix start/stop script.	NEGATIVE	0.9939337372779846
+This loop only iterates twice but the sleep time is one-third, thus only sleeping two-thirds all together. Is this intended?	NEGATIVE	0.9980936050415039
+It seems odd to me to have non deterministic tests.This code seems like it could lead to a test failing one time and succeeding when you try it again.	NEGATIVE	0.9995689392089844
+I agree!Just added https://github.com/mongodb/mongo/commit/1450e4ccdf72c77f9e5b8d037bcaff732d863ab3 to remove the non-determinism.	POSITIVE	0.9715203046798706
+SERVER-3717 (typo)	NEGATIVE	0.995481014251709
+I don't know if it is ok to add comments here, if not I'm sorry and won't do it again.This makes my build fail saying that thread-local is not supported for this target which is true because osx doesn't support __threadAdding !defiled(__MACH\__) makes osx use thread_specific_ptr. I'm using osx Lion and building with no args.Feel free to delete the comment :)	NEGATIVE	0.9997596144676208
+thanks - just pushed an attempted fix.	POSITIVE	0.8331020474433899
+i.e. use query option oplog replay which can efficiently find starting position in a very large oplog when querying GTE	NEGATIVE	0.9613749384880066
+I'm not sure if this is necessary. Write locks are greedy so a secondary is more likely to starve reads than the sync thread.To keep replication up-to-date, we really need a way of prioritizing the oplog-reading thread on the primary.	NEGATIVE	0.9993484020233154
+Would the try/catch be better in _addWriteBack?	NEGATIVE	0.9994216561317444
+please use real names.Client::GodScope godScope;	NEGATIVE	0.9746683835983276
+see coding styleif () {}else {}	NEGATIVE	0.9897565841674805
+This is a rather odd decision, but I suppose there are reasons behind them.	NEGATIVE	0.9768738150596619
+Bad Scott! Bad!	NEGATIVE	0.9997802376747131
+Should it only do this for a replica set and not Master/Slave?	NEGATIVE	0.9993541240692139
+test message	NEGATIVE	0.9964089393615723
+we need to be able to run single files directly - so we need load.js in there	NEGATIVE	0.9995522499084473
+Would be great to break this up a bit.Too late now - but there is some refactoring and some real changes.	POSITIVE	0.9927176833152771
+Shouldn't we also globally replace RS_SHUNNED with RS_REMOVED ?	NEGATIVE	0.9991657733917236
+would be nice to break these up...especially since the bson one is potentially large	POSITIVE	0.6427761316299438
+Why did you add the copy and assignment ops? I think those are the same as the automatically generated ones.	NEGATIVE	0.999241292476654
+i guess that is a good addition anyway in the sense that lock+fsync is then better.	POSITIVE	0.9774946570396423
+not sure exactly how this has evolved but originally the idea was that with ThreadSpanningOp when you use it, you use it only and it wasn't designed to interoperate with the other Lock:: classes and stuff.thus it didn't set threadstate for example.it is fine if it is different but does this now imply i can use ThreadSpanningOp interoperably with all the other Lock:: classes?i imagine it won't play nicely with them.will read more later.	NEGATIVE	0.9983506798744202
+The ifdefs need to be changed to make this work on Windows XP.	NEGATIVE	0.9948649406433105
+What's the nature of the conflict in the "using boost::shared_ptr" implementation?That fixed the win32 buildbot and is also used in other unit test files.Should those files be changed as well?	NEGATIVE	0.9993278384208679
+It sounds like either method will work right now, but there are some reasons to avoid 'using boost::shared_ptr'.	NEGATIVE	0.9979970455169678
+Given your use case, scoped_ptr?	NEGATIVE	0.9973169565200806
+This is semantically different then what was there before and not nearly as powerful.The old way with -v you can turn this on at start or runtime.Please change this back and the other one below.	NEGATIVE	0.9995286464691162
+see abovecould make LOG if performance was the concern	NEGATIVE	0.9797265529632568
+this should just besleepsecs( runner->config.seconds )	NEGATIVE	0.9955868721008301
+would it make any sense to do```if( X.n ) {X.c.notify_one();}```as an optimization?	NEGATIVE	0.9989555478096008
+It's a bit of a microoptimization, since there's nobody to spuriously wake up when X.n is 0, but it would not be incorrect semantically.	NEGATIVE	0.9764878153800964
+i agree if you are sure notify_one() is fast with no waiters.	POSITIVE	0.7850825190544128
+This is going to give some pretty inaccurate stats in high-activity systems.We'll just lose a lot of times.At least label it with SERVER-5026.If you're willing to fix it now, so it doesn't underreport times when the system is heavily loaded, I'd implement an AtomicUint64 in bson/util/atomic_int.h, give it an operator+=, and be done with it.It'll have the same cache performance problems as this implementation, but will at least report correct times.	NEGATIVE	0.999671459197998
+Call this "QLockTimingWrapper"?	NEGATIVE	0.9967063069343567
+Why here is just `_query.isEmpty()` instead of `_query.getFilter().isEmpty()` ?Like here https://github.com/mongodb/mongo/commit/d3d719c3aa72d63fe838f1e5eae7098e3bffe721#L0R95	NEGATIVE	0.9981608390808105
+this test is redundant. maybe you meant ax...|| bx... ?	NEGATIVE	0.9997615814208984
+Thanks, I will submit a fix to master for this shortly.	POSITIVE	0.9978644251823425
+No plans to merge the auth part atleast to v2.0?	NEGATIVE	0.9994601011276245
+it should be done as of v2.0.1	NEGATIVE	0.9838793873786926
+I can only see this in master, no other branches :]	POSITIVE	0.5770906805992126
+you're right.was only backported for mongostat, not mongotop.i'll look into it for 2.0.5	POSITIVE	0.997402012348175
+andy pulled it into 2.0.5 today.https://github.com/mongodb/mongo/commit/a55507d21e53970d324eef2cafc653aea648b885	POSITIVE	0.9132660627365112
+uncomment this?	NEGATIVE	0.9984014630317688
+did later	POSITIVE	0.9807144403457642
+@erh What do you think of the redis implementation of TTL? http://redis.io/commands/expire	NEGATIVE	0.9972010850906372
+Its hard to compare directly as the whole system is so different.On Fri, May 11, 2012 at 1:42 AM, Sid Upadhyayreply@reply.github.comwrote:> @erh What do you think of the redis implementation of TTL? http://redis.io/commands/expire> --->> Reply to this email directly or view it on GitHub:> https://github.com/mongodb/mongo/commit/25bdc679a0e559d64ec7f22b0468cf5b1671c4e7#commitcomment-1318817	NEGATIVE	0.9939272403717041
+This was like this on purpose as their are different implementations.Please revert.	NEGATIVE	0.9978065490722656
+Why global lock?Is lock for collection only is not enough?	NEGATIVE	0.994856595993042
+It's more work to determine which collection to lock, and this line is hit rarely if at all.	NEGATIVE	0.9945182800292969
+This is going to cause problems with other code in the server that assumes a certain format.Going to revert this part.	NEGATIVE	0.9997590184211731
+Oh snap! Hari K opening his sources!![Hari](http://farm2.staticflickr.com/1332/980464134_23807e3eb2.jpg)	NEGATIVE	0.938260018825531
+That's not Hari! That man has hair!	NEGATIVE	0.9720167517662048
+Commit message should say _recvChunkCommit, not _recvChunkVersion	NEGATIVE	0.9991521835327148
+what'shappeningbefore	NEGATIVE	0.9979085326194763
+Typo in commit message - this actually fixes SERVER-8115.	NEGATIVE	0.9985729455947876
+what happened here?	NEGATIVE	0.9969198703765869
+Hi Hannes,```Text Search will be released with 2.4.It is presently available in```2.3.2.-POn Thu, Jan 31, 2013 at 4:15 PM, Hannes Magnussonnotifications@github.comwrote:> what happened here?>> —> Reply to this email directly or view it on GitHubhttps://github.com/mongodb/mongo/commit/f201972ecc87f099777e1c61f269998f4399caf4#commitcomment-2539781.	NEGATIVE	0.9959729909896851
+I mean with that specific word, it has several spaces which I imagine will break stuff.It should probably have been on a new line	NEGATIVE	0.9829819798469543
+the key should be pidfilepath	NEGATIVE	0.9913516044616699
+any plans on this getting merged in, i am running into maxconnection limits issues almost everyday.	NEGATIVE	0.997474730014801
+We weren't planning to backport this change, but it's usually not a good idea to run with more than 20k conns.Have you looked into why your connection load is so heavy?	NEGATIVE	0.9997203350067139
+SERVER-9497 is the ticket associated with this commit	NEGATIVE	0.9871962070465088
+This log message made my entire evening (during which I was harshly awoken and summoned to fix things). You are a hero, nay, a champion. I salute you.	POSITIVE	0.9966347217559814
+Glad I could help, I guess!	POSITIVE	0.997772216796875
+Hi - just noted that the VC++ 2010 project still contains references to principal.cpp and wont build.	POSITIVE	0.9987345933914185
+Excellent :)	POSITIVE	0.9998304843902588
+should we enable this now?	NEGATIVE	0.9932786226272583
+Yes.Already spoken to greg about this.On Tue, Sep 17, 2013 at 6:16 AM, Gianfranco Palumbo <notifications@github.com> wrote:> should we enable this now?>> —> Reply to this email directly or view it on GitHubhttps://github.com/mongodb/mongo/commit/c34d5a987b25ec72b989077769435404ad7d3608#commitcomment-4110206> .	NEGATIVE	0.9925228357315063
+Great!	POSITIVE	0.999869167804718
+Whoot! Thanks Matt	POSITIVE	0.9997215867042542
+Are you planning to get this timedWaitToBeNotified() function back?	NEGATIVE	0.9995335936546326
+(cherry-picked from commit 6a3d6d0affbff6249caa50897dcbe325eb45aea9)	NEGATIVE	0.9879338145256042
+This is actually for SERVER-13753 I believe.	NEGATIVE	0.9865289330482483
+Is there a reason a new snapshot is created after committing a unit, instead of in beginUnitOfWork()?	NEGATIVE	0.9994596838951111
+Can you take a look at patch: https://reviews.facebook.net/D21381 and see whether the interface works for you?	NEGATIVE	0.9887557029724121
+Do you expect "status.IsNotFound()" is possible here? I assume the handling of corruption or IOException should be different from NotFound.	NEGATIVE	0.9983222484588623
+rocksdb::DB::GetLiveFilesMetaData() can return you information about the LSM tree, including each files' level and key range.	NEGATIVE	0.9801819324493408
+I cannot think of any way of doing that. What's the use case of that? We can consider whether adding something like can help.	NEGATIVE	0.9992837905883789
+Is a shorter separator possible with your key structure?	NEGATIVE	0.9990845322608948
+Usually, the best practice is to check _iterator.status() if it is not valid, and handle the case like corruption or IOException accordingly.	NEGATIVE	0.9968759417533875
+What's the problem of it?	NEGATIVE	0.9997192025184631
+ _checkStatus()?	NEGATIVE	0.9962018728256226
+This return value is a little bit confusing to me. KeyMayExist() does bloom filter check so that even true is returned, the key still may not exist in the DB. Is it what this comment line mean?	NEGATIVE	0.9994449615478516
+Hi, I'm glad to be able to see the progress. I have some inline comments.Another question: last Tuesday, I heard someone said that RecoveryUnit::isCommitNeeded() is going away. Is it still going to happen?	NEGATIVE	0.985393762588501
+Is it merged already? If it is, can you point me the revision?	NEGATIVE	0.9977506995201111
+A question inline.	NEGATIVE	0.9769257307052612
+I think so, but it will take some experimentation to be sure.	NEGATIVE	0.9872423410415649
+No. The RecordID[1] passed in to RecordStore::updateRecord should always be valid. Inserting / upserting is handled in the higher level code.[1] RecordID is currently spelled DiskLoc, but we plan to change that soon.	NEGATIVE	0.9981533288955688
+I think that will cover the usecase for this function.	NEGATIVE	0.9976201057434082
+We have a user-facing "touch" command that allows users to preload specified data and/or indexes in to memory in an efficieint manner. For now leaving this as a no-op should be acceptable as it is for optimization, not correctness.	NEGATIVE	0.9988096356391907
+Probably in this case, but these IDs are only 8 bytes, so it may not buy too much. The index comparator would probably be a more usefull optimization, but it is trickier.Either way, seems like an optimization that can wait.	NEGATIVE	0.9991204738616943
+It is somewhat unclear what operations on an Iterator require checking status(). Why not just return a rocksdb::Status from the ones that do?	NEGATIVE	0.9987642168998718
+Need to decide if these should always be fatal or if there are some failure modes that are acceptable.	NEGATIVE	0.9993863105773926
+@RedBeard0531 the iterator interface comes from LevelDB. I don't know the answer:)	NEGATIVE	0.9988629221916199
+The return value is basically only used for corruption checking, as it should always be true (except for special cases involving background indexing where it is ignored entirely). We may be able to just remove the return value for this method.Basically, it is always ok for this function to return true (although index corruption may go unnoticed), but it should only return false when sure that the key doesn't exist since that can indicate an error.	NEGATIVE	0.8992549180984497
+@siying You may also be interested in https://github.com/mongodb/mongo/commit/e970e918c5300a13360edb57a88871b02dbe5982Yes, isCommitNeeded() and commitIfNeeded() will be going away soon. Possibly this week.	NEGATIVE	0.9968067407608032
+@RedBeard0531here is my understanding. A snapshot is technically correct from any time before the first read/write in a transaction (correct me if I'm wrong). The later the snapshot is declared, the performance of RocksDB is likely to be better, because outstanding snapshots during a RocksDB mem table flushing will force us to keep two copies. Seems to me that it will also better for MongoDB since it is less counter-intuitive for users.	NEGATIVE	0.9791569113731384
+@RedBeard0531 thanks. I'll take a look at https://github.com/mongodb/mongo/commit/e970e918c5300a13360edb57a88871b02dbe5982	POSITIVE	0.804458737373352
+Actually a snapshot is lazily constructed on first use at line 140 below. This is just "refreshing" the snapshot to reflect the WriteBatch we just committed so that _snapshot or _writeBatch will have the latest copy of anything we wrote to.	POSITIVE	0.993975818157196
+@RedBeard0531 can you give more context about why people want to do it? I understand that by issuing a touch before issuing the query, the extra query time will be reduced. But the total time that a user needs to spend on waiting is not reduced, right?Again, technically, it is technically possible for us to add a feature to warm to cache for a column family. Just try to understand the exact use case.	NEGATIVE	0.9758664965629578
+PS here is a post about it: http://blog.mongodb.org/post/44706549534/mongodb-tip-the-touch-command	NEGATIVE	0.9898291826248169
+@RedBeard0531probably I have some misunderstanding about how RecoveryUnit is used. In my understanding, after removing CommitIfNeeded(), one transaction will use one RecoveryUnit, which includes one snapshot and one write batch. commitUnitOfWork() will be called when committing one transaction, and the refreshed _snapshot will be used by the next transaction, if we want to reuse the recovery unit. Am I understand correctly?	NEGATIVE	0.9980887174606323
+The word "Transaction" is a bit loaded so lets avoid it for now. Consider a multi update that adds 5 "awesome points" to all users if today is their birthday. In mongo, that whole multi-update will use a single RecoveryUnit instance. However, a new WriteUnitOfWork will be created (on the single RU) and committed for each user that matches the query while we are updating thier object. This is because we only guarantee isolation and atomicity on each document, even when doing a multi-update.	NEGATIVE	0.9894667863845825
+Did I miss anything? In dropDatabase(), while _entryMapMutex is hold, closeDatabase() is called, where _dbCatalogMapMutex is hold?	NEGATIVE	0.9994927644729614
+lock _dataSizeLock is still hold here. Is it expected?	NEGATIVE	0.9948818683624268
+I don't understand. How is it possible unless there is a bug in RocksDB? Reverse Seek() returns !Valid(), should mean the look-up key is smaller than the smallest key in the DB. Did you see it happening?	NEGATIVE	0.9988108277320862
+Hi, this patch broke the build when RocksDB is enabled. Do you want to make sure storage/rocks is still buildable after changing the storage APIs?	NEGATIVE	0.9959977269172668
+why NULL here :(	NEGATIVE	0.999588668346405
+Tnx @monkey101 !	POSITIVE	0.5256451964378357
+Any reason why is this NULL here? RocksDB SIGSEGVs because it's expecting OperationContext.	NEGATIVE	0.9996553659439087
+Is there going to be another 2.6.5 release candidate?If so, can we get this included?	NEGATIVE	0.9994679093360901
+8192 Alignment size raized the fassert 16143 on my PPC systems, this is why I changed it in the first place.	NEGATIVE	0.9987584352493286
+Hi @corentinbaron,This is more of a reminder to ourselves. We were thinking of validating the numerical value of the block size itself - for example, that it should be a power of 2.Ben	POSITIVE	0.9720128178596497
+Hi @lukebrowning,You should vote for the back port on:https://jira.mongodb.org/browse/SERVER-14835The **Backport** field has been set to _Requested_ - we periodically review all tickets requested for back port. If the ticket is approved (or rejected) for back port, you will see a corresponding change in the **Backport** field and the fix should show up in the next release.Regards,Ben	NEGATIVE	0.9934414029121399
+Under Centos 7, mongod is in /usr/bin	NEGATIVE	0.9976843595504761
+Thanks @benety !	POSITIVE	0.9997453093528748
+@syllogismos, please take your question over to the [mongodb-user](https://groups.google.com/forum/#!forum/mongodb-user) mailing list. We use github exclusively for development related matters.	NEGATIVE	0.9980168342590332
+Ok. I will, thanks, just got excited I found the commit that I'm looking for.	POSITIVE	0.9997434020042419
+Note, this fix has been backported to the v2.6 branch (ddce701ed775996f2a49fc949e26c5bcbc38fe84) and is present in 2.6.5 onward.	NEGATIVE	0.9900903105735779
+https://jira.mongodb.org/browse/SERVER-16721	NEGATIVE	0.9940959811210632
+Can https://jira.mongodb.org/browse/SERVER-3719 be marked as fixed now that this change is in or is there more to do still?	NEGATIVE	0.9990929961204529
+Looks like maybe https://jira.mongodb.org/browse/SERVER-7804 and https://jira.mongodb.org/browse/SERVER-3304 can be marked as resolved now too	NEGATIVE	0.9976640343666077
+Should https://jira.mongodb.org/browse/SERVER-16734 be closed as fixed now?	NEGATIVE	0.9992987513542175
+@benmccann - yes, those tickets are all assigned to Mathias and with fixVersion = next release candidate. They'll be resolved when the RC ships or fixVersion will be bumped.	NEGATIVE	0.9984665513038635
+Cool. Gotcha. Thanks for explaining how the process works	POSITIVE	0.9997987747192383
+I figured you would mark tickets as fixed when the commit goes into to address them and then release the next RC when all the tickets assigned to that RC are fixed (or bumped to a later RC). If you don't mark them as fixed when the commit goes in, but rather when the RC is released then how do you decide it's time to release the RC?	NEGATIVE	0.9993699789047241
+Oh, looks like they have been marked as resolved now instead of waiting for the RC to ship	NEGATIVE	0.9934290647506714
+This diff doesn't remove V8_HOST_CAN_READ_UNALIGNED define in case of x86/x64 arches (in src/third_party/v8/src/globals.h), is that intended? The binary crashes on x64 with 4.9.2 all the same...	NEGATIVE	0.9995050430297852
+Do i have to add these files	NEGATIVE	0.9945679306983948
+What is the option necessary to make this work?I tried the various settings here:https://jira.mongodb.org/browse/SERVER-965and all fail.	NEGATIVE	0.9997888207435608
+http://docs.mongodb.org/manual/reference/program/mongod/#cmdoption--wiredTigerDirectoryForIndexes	NEGATIVE	0.9967625737190247
+nope - does not work (mongo 3.0.1)returns this error in mongo log:"I STORAGE[initandlisten] exception in initAndListen: 72 Metadata contains unexpected value storage engine option for directoryForIndexesExpected true but got falseinstead, terminating"from this command line:"/usr/local/mongo/bin/mongod --wiredTigerDirectoryForIndexes -f /etc/mongo/mongodb.conf"	NEGATIVE	0.9995276927947998
+what are the contents of your mongodb.conf file?This option is only valid if you are using the WiredTiger storage engine.	NEGATIVE	0.9967333674430847
+# mongodb.confdbpath=/data/wt1logpath=/data/loglogappend=trueport=27017unixSocketPrefix=/tmprest=truehttpinterface=truejournal=truedirectoryperdb=truefork=truereplSet=rs1storageEngine=wiredTigerdirectoryForIndexes=1###	NEGATIVE	0.9908654093742371
+wiredTigerDirectoryForIndexes=1 (instead of directoryForIndexes=1) also fails with same error above	NEGATIVE	0.9994990229606628
+Please see [this comment in SERVER-965](https://jira.mongodb.org/browse/SERVER-965?focusedCommentId=878839&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-878839).	NEGATIVE	0.9961756467819214
+Awesome! Time to remove https://github.com/mongodb-partners/mongo-rocks/blob/master/.clang-format :)BTW are you planning to backport this to 3.0?	NEGATIVE	0.7720000147819519
+@igorcanadiThanks!We are still sorting out a few rough edges, so might want to wait on removing your formatter.At this point, we have no plans to backport to 3.0	NEGATIVE	0.9996466636657715
+@igorcanadi - FYI rough edges have been addressed, it is staying.	POSITIVE	0.8490909934043884
+Thanks!	POSITIVE	0.9998165369033813
+t	NEGATIVE	0.9681643843650818
+Thanks, @monkey101 -- this fell through the cracks.	NEGATIVE	0.998680830001831
+@shreyasp can you email the mongodb-user user group? This is probably not a great venue for troubleshooting your problem.https://groups.google.com/forum/#!forum/mongodb-user	NEGATIVE	0.9997449517250061
+Nice!	POSITIVE	0.999863862991333
+:cake: :fireworks: :smile:	POSITIVE	0.9993955492973328
+I try to update a minutes array(this array is not exist) with upsert & $ positional operator. I need it automatic create a minutes array, but created a minutes object.	NEGATIVE	0.9982595443725586
+Many many thanks! Glad to see that MongoDB listens to their audience :)	POSITIVE	0.9996091723442078
+What about when globalSec = now?	NEGATIVE	0.9968799948692322
+Hey Mathias! Do we need to apply the same patch to MongoRocks, too? Would it make sense to move the test to generic storage_engine tests?	NEGATIVE	0.9994613528251648
+Yes, you'll need to do this in MongoRocks. This would make sense as a generic test, but we don't currently have a way to test oplogs in generic tests, and I don't think that will happen before the 3.2.0 release.	NEGATIVE	0.9959826469421387
+Ive seen a lot of complaints about missing pid dir when running Centos7 / systemdHere is a tip: You should make sure /var/run/mongodb exists byadding a file/etc/tmpfiles.d/mongod.confIt should contain the followingD /var/run/mongodb 0755 mongod mongod -This will ensure that the pid folder always exists. Has worked well for me and seems to be the systemd way of doing it...http://www.freedesktop.org/software/systemd/man/tmpfiles.d.html	POSITIVE	0.8101919889450073
+Same problem here with OpenSuse and the line missing from the init file! Thanks!	NEGATIVE	0.9953728318214417
+On my system it seems that the logged ip address is from the server ! It should be the client ip.	NEGATIVE	0.9982240200042725
+@ecocode Thanks for reporting this! I can confirm this behaviour, and I've opened a ticket in our issue tracking system to follow it: https://jira.mongodb.org/browse/SERVER-22054	NEGATIVE	0.9278327822685242
+Hi!Is there a more updated list I should be looking at? I'm not finding error codes: 16540 or 16549, which are referenced in Moped error messages:```See https://github.com/mongodb/mongo/blob/master/docs/errors.md for details about this error.```	NEGATIVE	0.9996270537376404
+This file is unfortunately out of date, but you can generate a new one as follows:`buildscripts/errorcodes.py -o errors.md --report=markdown`	NEGATIVE	0.9992213845252991
+Are you sure that the User/Group is mongod and not mongodb ? (On wheezy it's mongodb)	NEGATIVE	0.9989638328552246
+Thanks for the catch, and sorry about the confusion. I hit this in my own testing, and am planning to put the fix to this in with the change. I hope to get the change in in the next ~day or so.	NEGATIVE	0.9892450571060181
+Hi, after an update from mongo 3.0 to 3.2 I get an error on $substr while trying to search inside a collection. I do know how to interpret or fix this error. Any help?	NEGATIVE	0.9991825222969055
+Thanks for the response. I think this may be it. I will post the outcome after we modify out code.	POSITIVE	0.9840955138206482
+Ok. I've filed [SERVER-22580](https://jira.mongodb.org/browse/SERVER-22580) which might help resolve the issue in the future.	NEGATIVE	0.9829988479614258
+Doesn't this mean that the packages for Jessie will _not_ contain the sysvinit script in addition to the systemd service file?Jessie changed the default to systemd, but sysvinit is still actively supported, so it would be neat/helpful if the package contained both to maintain compatibility. :smile:	NEGATIVE	0.829540491104126
+Interestingly, looks like this commit caused RocksDB to start failing jsCore_small_oplog and jsCore_small_oplog_rs with OOM issues:![screen shot 2016-02-26 at 11 27 04 am](https://cloud.githubusercontent.com/assets/1091023/13362955/ff5c8ade-dc7b-11e5-89e8-f886310aa46a.png)	NEGATIVE	0.9997448325157166
+Here's the test output: https://logkeeper.mongodb.org/build/56cf5f1abe07c44a012dc316/test/56cf5fbbbe07c44a012ddba0?raw=1	NEGATIVE	0.9972888827323914
+JIRA ticket should be:https://jira.mongodb.org/browse/SERVER-23853	NEGATIVE	0.9962625503540039
+Those lines were already in my init file (MongoDB shell version: 3.0.11 on centos 7) but I still had to manually create the folder	NEGATIVE	0.9991296529769897
+Hey @andy10gen, this diff introduced a bunch of failures for me: https://gist.github.com/igorcanadi/1dca04aa6f6506a4ce6ffb5cf5fb72d3.I'm using g++ 4.8.5, is this a known problem?	NEGATIVE	0.9995458722114563

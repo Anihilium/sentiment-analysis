@@ -139,3 +139,5 @@ cython_debug/
 
 commit_comments.bson
 test.py
+
+vscode/
