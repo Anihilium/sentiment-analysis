@@ -1,9 +1,8 @@
 from transformers import pipeline
 import re
 classifier = pipeline('sentiment-analysis')
-
-with open("analysisWithTransformers.txt","w") as output:
-    with open("data.txt", 'r',encoding="utf8") as input:
+with open("data/mysql_analysis.csv","w") as output:
+    with open("data/mysql.txt", 'r',encoding="utf8") as input:
         while True:
             text=re.sub("\n","",input.readline())
             if len(text) < 512:

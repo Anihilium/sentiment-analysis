@@ -1,3 +1,4 @@
+Body	Label	Score
 this was just a test.	NEGATIVE	0.9926994442939758
 lol ;)	NEGATIVE	0.9810318350791931
 Looks like a typo here:http://github.com/mongodb/mongo/commit/2b7eb102159a36129222afa1883ea3b15145e08b#L0R40See &7 instead of &&	NEGATIVE	0.9976865649223328

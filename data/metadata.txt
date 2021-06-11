@@ -1,12 +1,5 @@
-<<<<<<< HEAD
 A comment is composed of :
 url;html_url;id;node_id;user;position;line;path;commit_id;created_at;updated_at;author_association;body
 
 With user being defined by :
-=======
-A comment is composed of :
-url;html_url;id;node_id;user;position;line;path;commit_id;created_at;updated_at;author_association;body
-
-With user being defined by :
->>>>>>> b47ed65faa48597b9f2a012c3342a12a4803c429
 login;id;node_id;avatar_url;gravatar_id;url;html_url;followers_url;following_url;gists_url;starred_url;subscriptions_url;organizations_url;repos_url;events_url;type;site_admin

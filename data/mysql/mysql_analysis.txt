@@ -1,0 +1,106 @@
+Body	Label	Score
+This doesn't handle null values; now there is no distinction between null and the empty string. Try:client.query('SELECT NULL as field_a, NULL as field_b, "" AS field_c', function(err, results) {if (err) throw err;assert.strictEqual(results[0].field_a, null);assert.strictEqual(results[0].field_b, null);assert.strictEqual(results[0].field_c, '');client.end();});	NEGATIVE	0.9995813369750977
+Fixed in: 10e81c252e6a9f3d83e9d05a8e8f693a2756784c	NEGATIVE	0.9828786849975586
+Is there a specific reason why BLOB's aren't cast into buffers?	NEGATIVE	0.9988193511962891
+My original patch contained support for casting blobs to buffers. Maybe there is a plan for implementing it differently? I dunno.	NEGATIVE	0.998972475528717
+Yeah, I didn't do that part yet because it is hard to do efficiently. I need to talk to ryan to see if we can do better than that, but otherwise yes - this is coming back in. If any of you guys needs it right now, ping me and I'll put the naive implementation back in.	NEGATIVE	0.9912592768669128
+Doesn't this create a memory problem for large result sets?	NEGATIVE	0.9993537664413452
+It's not a bug - it's a feature! I mean in a lot of cases it is very convenient to buffer all result rows, but it is entirely optional. If you don't pass a callback to the `.query()` function, no result set buffering takes place and you only get individual `'row'` events.But maybe I'm missing something and you're saying there is a memory leak here?	NEGATIVE	0.9988297820091248
+I see. Did not see you always return the query object so one can handle the events themselves.Impressive work!	POSITIVE	0.9990652203559875
+Thanks Malte! I'm using the same pattern in `formidable` (passing a callback causes buffering). It's certainly not obvious from a user perspective, so I think a little work needs to go into promoting this approach. I'll write a little blog post about it.In the future I would like to go even further and allow streaming the row values themselves, but that's even harder in terms of finding a nice API for it (most folks wouldn't want this behavior by default).	NEGATIVE	0.997711181640625
+Hmm, maybe if one is coming from an ActiveRecord like background. When working with cursors, receiving a callback per row feels natural. Then again this can always be handled on the level above as long as the raw API is exposed.	NEGATIVE	0.5770212411880493
+Well, not everybody is as streamie as you, jed and me : ).	NEGATIVE	0.9982085227966309
+You can write to me, when this part of the improvements will be completed, I will update the [node-mysql-bindings-benchmark](http://github.com/Sannis/node-mysql-bindings-benchmarks) :)Any comments are welcome.	POSITIVE	0.9935517311096191
+For now I just picked some low hanging fruits that were easy to spot. Hopefully I'll have time to do some full profiling soon to see if there is more performance to be gained. I'll let you know.	POSITIVE	0.8435462713241577
+<code>POWS[packet.index]</code> can also be written <code>1 << (packet.index << 3)</code> if you want to avoid multiplication (or <code>1 << (packet.index \* 8)</code> if you want it readable). but the lookup table is probably as fast :)	NEGATIVE	0.9939717650413513
+Cal: I just tried that, but it doesn't seem to be any faster. Do you see any reason why it should be faster than a property lookup?	NEGATIVE	0.9993009567260742
+It should be faster than the power op, but probably no faster than a property lookup in practice - they're both very very simple ops. I did a quick benchmark:```2 shifts : 273 per µs (microsecond)lookup: 201 per µspower:23 per µs```so i think the lookup is just fine :D	POSITIVE	0.9956603646278381
+Yeah, I still hope to find some major performance bottlenecks - right now this driver is still an order of magnitude slower than the C competition, and I don't think it should be that slow : ).	NEGATIVE	0.9987079501152039
+I just fixed the reconnect behavior in 2db5bbdb449686733290390cb3c196d9af3d43be. Your benchmark should now work.Anyway, also test `client.destroy()` as that is now behaving like `client.end()` used to behave. I would expect `client.end()` to be a good bit slower, but I guess you will see for yourself : ).	NEGATIVE	0.9944288730621338
+Is there any reason why this function, unlike all others is attached directly to Client rather than to Client.prototype?	NEGATIVE	0.9989737868309021
+Yeah, it doesn't depend on the state of a client instance, so this makes it "class method" in my book. How would you do it?	NEGATIVE	0.9942881464958191
+interesting, I imagine the lookup is a bit costly since it has to traverse a few scopes but 22%?? awesome!	NEGATIVE	0.8165212869644165
+Yeah, Tim-smart mentioned something about this to me a while back when I was working on a new websocket parser.	POSITIVE	0.9193645715713501
+I guess its all relative, compared to the rest of your app it might not make much of a difference at all, but pretty easy optimization to squeeze out	NEGATIVE	0.9847402572631836
+Yeah, I wouldn't take this optimization _anywhere_ else, but this switch statement is literally executed millions of times, so it makes sense here. There are a few other micro-optimizations like this that I have found, but they're not worthwhile compared to this. I'm still hoping to find some bigger opportunities to gain more speed. At this point this module is ~7x slower for SELECT and ~2x slower for INSERT compared to PHP.	NEGATIVE	0.9993686079978943
+ah, that explains it :)	POSITIVE	0.9833315014839172
+I'm just curious, what if array of functions indexed by state is used? At least in C it would be good optimization for a big switch.	NEGATIVE	0.997657299041748
+It turns out it's ~60% faster than using a plain variable as this test shows: http://jsperf.com/variable-tree-lookup	NEGATIVE	0.960719645023346
+vgrichina: Just tried it, it's just about the same speed it seems.	NEGATIVE	0.9944341778755188
+I think it's because you were looking up the property of an object which probably make v8 opt out of inlining the statement. The difference in those raw operations would not be 20% :)	NEGATIVE	0.9988713264465332
+yeah good call, if they are numeric and _not_ properties I could see v8 inlining them, but even eval() could get in the way of that I'd imagine	NEGATIVE	0.9895965456962585
+eval breaks pretty much all optimizations :)	NEGATIVE	0.9590583443641663
+yup lol	POSITIVE	0.9641520977020264
+Great, I'll update [node-mysql-bindings-benchmarks](http://github.com/Sannis/node-mysql-bindings-benchmarks) at this evening.	POSITIVE	0.9940598011016846
+Please push this newest version to NPM as soon as possible... I really need this array handling ability in a current project.	NEGATIVE	0.9932796955108643
+I agree. Please push to NPM.	POSITIVE	0.9790142178535461
++1 to pushing to npm	POSITIVE	0.9228347539901733
+How can I put the new password? MySQL version? Re-make the user?Edit 1: Is the Hashing?	NEGATIVE	0.999594509601593
+Does this pass the test suite?	NEGATIVE	0.9835879802703857
+There should be a test for this.	NEGATIVE	0.9962522387504578
+OK, I'll do it in a moment.	POSITIVE	0.9994745254516602
+You were right about the test. It made me realize the stupidity of my change :smile: I'll update it now.	NEGATIVE	0.9963564276695251
+Great work man. Thank you so much. :heart: :heart: :heart:	POSITIVE	0.9998631477355957
+Why does `'drain'` take an `err` argument here? I think this is copy & paste failure, isn't it? : p	NEGATIVE	0.9998127222061157
+LGTM, good work. Did you also add a note to the docs?UPDATE: never mind, I see you did. Awesome!	POSITIVE	0.9998454451560974
+Yeah.. you got me! :P	POSITIVE	0.9992994070053101
+Fixed.	POSITIVE	0.974662184715271
+You should create a new class called `Field` for this as v8 really loves named constructors for hidden class optimizations. It also adds more structure to things, which I like.	POSITIVE	0.9962613582611084
+:hammer: sweet!	POSITIVE	0.9997287392616272
+No, thank you guys.That's an awesome turn around!Sorry for being absent in the earlier request for a use case.My particular use case was that I needed to get 3M rows of data out of Mysql and then pass it to another batch API.The data had to be chunked < 1000 rows for the batch API.So i looped through keys (id < 1000,id > 1000 < 2000,etc).But with 3M rows and growing that's > 3K queries that have to get queued up before any work starts and the foot print is more significant and not fixed.	NEGATIVE	0.999283492565155
+:watermelon: lawlz	NEGATIVE	0.9457523226737976
+lol	NEGATIVE	0.9438177347183228
+:+1:	POSITIVE	0.9945157170295715
+![Tabs](https://gimmebar-assets.s3.amazonaws.com/4d288c2806362.png)	NEGATIVE	0.9838466048240662
+:heart:	POSITIVE	0.9998063445091248
+:+1:	POSITIVE	0.9945157170295715
+No update on the Changes file?	NEGATIVE	0.9996131062507629
+Oops, that's my bad. First time bumping versions in this project. I will update the changes file.	NEGATIVE	0.9993739128112793
+It's just Pool, I bumped version before you 1 or 2 days :)	NEGATIVE	0.9971082210540771
+@bhafer The only concern I have here is that your entire app shares a single connection, right?This means if you get 100 requests or have a couple people running some reports that take a bit process, your single DB connection could become a pretty big bottleneck, right?Any clever ways around this?	NEGATIVE	0.9991686940193176
+@anthonywebb you would need to use a pool of connections or make a new connection for each request, whichever is better for your use-case.	NEGATIVE	0.9989466071128845
+@dougwilson do yo know of anyone who is doing something like that above with the new pool support that was added?I've been looking at the pool stuff but am not wild about having to manually release the connection each time a db call is complete, feels like that should just happen in the background automatically?	NEGATIVE	0.9989916682243347
+@anthonywebb I updated my comment above with a function that will run a single query from the new built-in pool where you don't have to worry about returning anything to the pool. Just note cavets about doing something like this you cannot use transactions and other session state (the save cavets apply to `node-mysql-pool` there, so I guess you won't see anything different).	NEGATIVE	0.9831188917160034
+The main reason the example in the README does not work is because `connection = mysql.createConnection(connection.config);` does nothing. `connection` is not the global connection variable, as expected in the example, rather it is the name of the first argument of `handleDisconnect`.	NEGATIVE	0.9997112154960632
+An added benefit of registering the connection object inside the query object is the ability to close it directly within the query callback.This raises a question whether the connection object reference should be declared with an underscore or not.``` jsmysql.createConnection(options).query(sqlTxt,function(err,d) {process(err,d);this._connection.end();});```	NEGATIVE	0.9113093614578247
+I agree it can get handy and also agree that if you want to expose it in the callback remove the underscore because it's not something "internal".	NEGATIVE	0.8530386090278625
+This is breaking lots of code for us, we now have to check if each date column actually returns a date object or not :(	NEGATIVE	0.9986563920974731
+This should only happen on invalid dates. How did you treat invalid dates before?	NEGATIVE	0.9993448257446289
+Yay :palm_tree:	POSITIVE	0.7426583766937256
+:) thanks for the catch @dougwilson	POSITIVE	0.9987611174583435
+This is sync? I thought this had to be async :)	NEGATIVE	0.9892633557319641
+It's magic! Basically the statement is not prepared yet when the `prepare()` function returns, this happens async in the background. However, you can already call query() on the returned statement, and the actual query will execute once the prepare is done. If the prepare has an error, the error goes to the query.Not sure if this is the right / perfect API, but it seemed to fit well with how the lib is working so far. What ya think?	NEGATIVE	0.5357592701911926
+I love it, no need to add another level, just call prepare and query right after :)	POSITIVE	0.9998003840446472
+Build failing since this commit.	NEGATIVE	0.9997910857200623
+Has the fix been included in a build and if so what is the earliest version it was included in? I'm running v0.10.21 and	NEGATIVE	0.9994203448295593
+It's included in 2.0.0-alpha9	NEGATIVE	0.9551977515220642
+:+1:	POSITIVE	0.9945157170295715
+Congratulations guys!PS: don't forget to update changelog please :)	POSITIVE	0.9996092915534973
+Thanks! (me updating changelog)	POSITIVE	0.9994865655899048
+Thanks guys, i am waiting for this release..	POSITIVE	0.9895303845405579
+AFAIK this can be moved down to line 69, as everything above there will keep the domain (due to either core support, or `Connection` support). This would be prevent a double-bind on all the non-queued cases that way.	NEGATIVE	0.98626309633255
+ok sounds right to me	POSITIVE	0.9997910261154175
+This means it's no longer possible to override `createConnection`, although it's still specified in the documentation as working:https://github.com/felixge/node-mysql#pool-options-[Unknown]	NEGATIVE	0.9994542598724365
+Thank you, this has been removed from the documentation.	NEGATIVE	0.9970868825912476
+createSecurePair is deprecated in v0.11.x.You're probably better off just doing something like this for v0.10+ instead:``` javascriptvar wrappedSock = tls.connect({key: this.config.ssl.key,cert: this.config.ssl.cert,passphrase: this.config.ssl.passphrase,ca: this.config.ssl.ca,socket: this._socket}, onSecure);wrappedSock.pipe(this._protocol);// write to wrappedSock and not this._socket from here on out ...```	NEGATIVE	0.9994959235191345
+Thanks, I'll try this! (also in node-mysql2 as the code is the same)	POSITIVE	0.9881325960159302
+created issue for this - https://github.com/felixge/node-mysql/issues/737	NEGATIVE	0.994354784488678
+Why is this custom startTLS code necessary? Why not just use `tls.connect({ socket: this._socket, ... }, onSecure);` to upgrade the socket? That functionality exists even in v0.8.x. It should work for v0.11+ as well.	NEGATIVE	0.9960659742355347
+This was just an extension of the code that was contributed ;) I'll look into replacing it with `tls.connect`.	NEGATIVE	0.9993691444396973
+P.S. A PR is always welcome!	POSITIVE	0.9998204708099365
+@mscdex nevermind, I have already swapped it to `tls.connect` on my local machine! I see a "wrinkle" right now in that `tls.connect` will verify the hostname on the certificate; I need to research to see if this is a valid default or not for MySQL servers.	NEGATIVE	0.9986193180084229
+Looks like no MySQL hosts out there support hostname verification by default (perhaps people's own setups may, but not third-party services). Unfortunately `tls.connect` has no way to opt into certificate verification without CN/SAN verification...	NEGATIVE	0.9997050762176514
+This will be an endlessly moving target; there is no version declaration.	NEGATIVE	0.9942914843559265
+oops, already pushed to master. I'll change to 1.2	NEGATIVE	0.829147219657898
+I have reverted this commit until you can declare which versions of io.js are actually supported and we don't suddenly start failing when 2.0 comes out, which this commit will cause.	NEGATIVE	0.9820851683616638
+Ok. If you do, please update `package.json` to specify that 1.0 and 1.1 of io.js are not supported.	NEGATIVE	0.8602636456489563
+I'll use this in mysql2 if you don't mind :)	NEGATIVE	0.9967144131660461
+Please do :) I'm 99% sure the Node.js community stole setting up istanbul + coveralls.io from me last year :) And it's been awesome to see people interested in getting code coverage going :D	POSITIVE	0.9988171458244324
+P.S. I may make tweaks to the config once it actually starts running on AppVeyor :) So far this configuration was based off Express.js stuff and the MySQL parts are all just guesses D:	NEGATIVE	0.9989379644393921
+thanks :) I'll wait for first test results	NEGATIVE	0.6420706510543823
+:disappointed: https://youtu.be/xeKMS62GrTI@jperras but "both" is too much. lol	NEGATIVE	0.9996888041496277
+:+1:	POSITIVE	0.9945157170295715
+\o/	NEGATIVE	0.6763930320739746
+can this be called out of order? Two compressed packets arrive one after another, cp1, cp2 => cp1.inflate called, cp2 .inflate called; cp2.inflate pushes result before cp1 ?	NEGATIVE	0.9987939596176147
+This still needs a lot of tests added, but this impl will only allow a single outstanding inflate at a time, which is what the `_inflating` guard is doing.	NEGATIVE	0.9975545406341553
+	POSITIVE	0.7481210827827454
